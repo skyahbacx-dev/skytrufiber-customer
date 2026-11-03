@@ -332,7 +332,7 @@ button:disabled{opacity:.65;cursor:not-allowed}
 /* ---------- ACCOUNT NUMBER VALIDATION ---------- */
 const accountInput=document.getElementById("account_number");
 accountInput.addEventListener("input",()=>{
-    accountInput.value=accountInput.value.replace(/\\D/g,"").slice(0,13);
+    accountInput.value=accountInput.value.replace(/\D/g,"").slice(0,13);
     accountInput.setCustomValidity("");
 });
 accountInput.addEventListener("invalid",()=>{
