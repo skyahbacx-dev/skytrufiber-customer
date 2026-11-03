@@ -17,7 +17,11 @@ $routes = [
     '/fiber/logout' => __DIR__ . '/SKYTRUFIBER/logout.php'
 ];
 $legacy = [
+    '/SKYTRUFIBER/consent.php' => '/fiber/consent',
+    '/SKYTRUFIBER/register.php' => '/fiber/register',
+    '/SKYTRUFIBER/register_success.php' => '/fiber/register/success',
     '/SKYTRUFIBER/no_consent.php' => '/fiber/no-consent',
+    '/SKYTRUFIBER/skytrufiber.php' => '/fiber',
     '/fiber/forgot_password.php' => '/fiber/forgot-password',
     '/fiber/save_survey.php' => '/fiber/save-survey',
     '/fiber/load_survey.php' => '/fiber/load-survey',
@@ -25,6 +29,13 @@ $legacy = [
 ];
 if (isset($legacy[$uriPath])) { header('Location: '.$legacy[$uriPath], true, 301); exit; }
 if (isset($routes[$uriPath])) { require $routes[$uriPath]; return true; }
+// Never expose internal PHP file paths directly. Static assets remain accessible.
+if (preg_match('/\\.php$/i', $uriPath)) {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Page not found.';
+    exit;
+}
 $file = __DIR__ . $uriPath;
 if ($uriPath !== '/' && is_file($file)) return false;
 if ($uriPath === '/') { header('Location: /fiber', true, 302); exit; }
