@@ -20,20 +20,22 @@ require_once __DIR__ . '/../db_connect.php';
 ============================================================ */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $account_number = trim($_POST['account_number']);
-    $full_name      = trim($_POST['full_name']);
-    $email          = trim($_POST['email']);
-    $district       = trim($_POST['district']);
-    $barangay       = trim($_POST['location']);
-    $date_installed = trim($_POST['date_installed']);
-    $remarks        = trim($_POST['remarks']);
+    $account_number = preg_replace('/\\D+/', '', (string)($_POST['account_number'] ?? ''));
+    $full_name      = trim((string)($_POST['full_name'] ?? ''));
+    $email          = trim((string)($_POST['email'] ?? ''));
+    $district       = trim((string)($_POST['district'] ?? ''));
+    $barangay       = trim((string)($_POST['location'] ?? ''));
+    $date_installed = trim((string)($_POST['date_installed'] ?? ''));
+    $remarks        = trim((string)($_POST['remarks'] ?? ''));
     $rating         = isset($_POST['rating']) && $_POST['rating'] !== '' ? (int)$_POST['rating'] : null;
     $password       = $account_number;
     $postedCsrf     = $_POST['csrf'] ?? '';
 
     if (!is_string($postedCsrf) || !hash_equals($_SESSION['registration_csrf'] ?? '', $postedCsrf)) {
         $message = "Your session expired. Please refresh the page and try again.";
-    } elseif ($account_number && preg_match('/^[0-9]{9,13}$/', $account_number) && $full_name && filter_var($email, FILTER_VALIDATE_EMAIL) && $district && $barangay && $date_installed && $rating >= 1 && $rating <= 5) {
+    } elseif (!preg_match('/^187870[0-9]{3,7}$/', $account_number)) {
+        $message = "Invalid account number. SkyTruFiber subscriber account numbers must start with 187870. Please check your bill or account details and enter the correct number.";
+    } elseif ($full_name && filter_var($email, FILTER_VALIDATE_EMAIL) && in_array($district, ['District 1', 'District 3', 'District 4'], true) && $barangay && $date_installed && $rating >= 1 && $rating <= 5) {
 
         try {
             /* Prevent duplicates */
@@ -118,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
     } else {
-        $message = "⚠ Please fill in all required fields.";
+        $message = "Please complete all required fields using valid information.";
     }
 }
 ?>
@@ -130,26 +132,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Standalone portal styling is contained in this page; no main-site CSS dependency. -->
 
 <style>
-body {
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
-    background: linear-gradient(135deg, #e8eefc, #f4f6fa);
-    margin: 0;
-    padding-top: 25px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* Form */
-form {
-    background: #fff;
-    padding: 35px;
-    border-radius: 20px;
-    width: 450px;
-    max-width: 92%;
-    box-shadow: 0 10px 28px rgba(20,24,40,0.14);
-    position: relative;
-}
+:root{--navy:#073b70;--blue:#0879bd;--ink:#18324b;--muted:#64788b;--line:#dce6ef}
+*{box-sizing:border-box}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,#dff3ff,transparent 42%),linear-gradient(135deg,#edf5fc,#f7f9fc);margin:0;min-height:100vh;padding:28px 14px;display:flex;justify-content:center;align-items:flex-start;color:var(--ink)}
+form{background:#fff;padding:clamp(22px,4vw,38px);border:1px solid #e5edf4;border-radius:22px;width:min(100%,620px);box-shadow:0 18px 55px #153b5b18;position:relative}
+@media(min-width:760px){form{margin:16px auto}}
+@media(max-width:480px){body{padding:12px 10px}form{padding:20px 16px;border-radius:18px}}
 
 /* Logo inside form */
 .logo-inside {
@@ -157,25 +145,26 @@ form {
     justify-content: center;
     margin-bottom: 10px;
 }
-.logo-inside img {
-    width: 140px;
-    border-radius: 50%;
-    background: white;
-    padding: 10px;
-    border: 3px solid #1a4fc4;
-}
+.logo-inside img{width:112px;max-width:35vw;border-radius:50%;background:#fff;padding:8px;border:2px solid var(--blue)}
 
-h2 {
-    text-align: center;
-    margin-bottom: 15px;
-}
+h2{text-align:center;color:var(--navy);font-size:clamp(23px,4vw,29px);margin:8px 0 6px}
+.form-intro{text-align:center;color:var(--muted);font-size:14px;line-height:1.55;margin:0 auto 24px;max-width:460px}
+.section-title{font-size:14px;color:var(--navy);font-weight:800;margin:24px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.field-help{display:block;color:var(--muted);font-size:12px;line-height:1.45;margin:5px 0 8px}
+.account-hint{display:flex;gap:10px;align-items:flex-start;background:#eef8ff;border:1px solid #cfe9fa;border-radius:11px;padding:11px 12px;margin:8px 0 10px;color:#174c70;font-size:13px;line-height:1.45}
+.account-hint strong{white-space:nowrap;color:var(--navy)}
+input::placeholder,textarea::placeholder{color:#98a8b7}
+input:invalid:not(:placeholder-shown){border-color:#d97777}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px #0879bd1a}
 
 /* Labels */
 label {
     display: block;
-    margin-top: 12px;
-    margin-bottom: 3px;
-    font-weight: bold;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    font-weight: 700;
+    font-size: 14px;
+    color: #29445d;
 }
 
 /* Inputs */
@@ -183,7 +172,7 @@ input, select, textarea {
     width: 100%;
     padding: 12px;
     border-radius: 10px;
-    border: 1px solid #d7dbe4;
+    border: 1px solid #d5e0e9;
     font-size: 15px;
     font-family: inherit;
     box-sizing: border-box;
@@ -202,8 +191,8 @@ input[name='account_number'] {
 
 button {
     width: 100%;
-    padding: 12px;
-    background: #1a4fc4;
+    padding: 14px;
+    background: var(--blue);
     color: white;
     border: none;
     border-radius: 12px;
@@ -212,13 +201,11 @@ button {
     font-size: 17px;
     font-weight: bold;
 }
-button:hover { background: #123a91; }
+button:hover { background: var(--navy); }
+button:focus-visible,a:focus-visible{outline:3px solid #8bcfff;outline-offset:3px}
+button:disabled{opacity:.65;cursor:not-allowed}
 
-.message {
-    color: red;
-    text-align: center;
-    margin-top: 10px;
-}
+.message{color:#9b2525;background:#fff2f2;border:1px solid #f3cccc;border-radius:10px;padding:12px;text-align:left;margin-top:14px;font-size:14px;line-height:1.5}
 
 /* Barangay dropdown */
 .dropdown-wrapper { position: relative; }
@@ -274,22 +261,28 @@ button:hover { background: #123a91; }
         <img src="/SKYTRUFIBER.png" alt="SkyTruFiber Logo">
     </div>
 
-    <h2>Customer Registration & Feedback</h2>
+    <h2>Customer Registration</h2>
+    <p class="form-intro">Register your SkyTruFiber account and share your service feedback. Please make sure your details match your subscriber records.</p>
 
     <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['registration_csrf'], ENT_QUOTES, 'UTF-8') ?>">
     <input type="hidden" name="source" value="<?= htmlspecialchars($source, ENT_QUOTES, 'UTF-8') ?>">
 
-    <label>Account Number:</label>
-    <input type="text" name="account_number" minlength="9" maxlength="13"
-           pattern="[0-9]{9,13}" placeholder="Enter 9–13 digit account number" required>
+    <div class="section-title">Subscriber Information</div>
+    <label for="account_number">Account Number</label>
+    <input id="account_number" type="text" name="account_number" minlength="9" maxlength="13"
+           inputmode="numeric" autocomplete="off" pattern="187870[0-9]{3,7}"
+           title="Your account number must start with 187870 and contain 9 to 13 digits."
+           placeholder="187870XXXXX" aria-describedby="accountHelp" required>
+    <div class="account-hint" id="accountHelp"><strong>Important</strong><span>SkyTruFiber subscriber account numbers must start with <strong>187870</strong>. Enter the complete number shown on your bill or subscriber record (9–13 digits).</span></div>
 
-    <label>Full Name:</label>
+    <label for="full_name">Full Name</label>
     <input type="text" name="full_name" placeholder="Enter full name" required>
 
-    <label>Email:</label>
+    <label for="email">Email Address</label>
     <input type="email" name="email" placeholder="example@email.com" required>
 
-    <label>District:</label>
+    <div class="section-title">Service Location</div>
+    <label for="district">District</label>
     <select id="district" name="district" required>
         <option value="">Select District</option>
         <option value="District 1">District 1</option>
@@ -297,16 +290,18 @@ button:hover { background: #123a91; }
         <option value="District 4">District 4</option>
     </select>
 
-    <label>Barangay:</label>
+    <label for="barangaySelector">Barangay</label>
+    <span class="field-help">Choose your district first, then search and select your barangay from the list.</span>
     <div class="dropdown-wrapper">
         <input type="text" id="barangaySelector" class="searchable-select" placeholder="Search or select barangay..." autocomplete="off">
         <input type="hidden" id="location" name="location" required>
         <div id="dropdownList" class="dropdown-list"></div>
     </div>
 
-    <label>Date Installed:</label>
+    <label for="date_installed">Installation Date</label>
     <input type="date" id="date_installed" name="date_installed" required>
 
+    <div class="section-title">Service Feedback</div>
     <label>How satisfied are you with your service?</label>
     <div class="rating-scale" role="radiogroup" aria-label="Satisfaction rating">
         <?php $ratingFaces = [1 => '😡', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😍']; ?>
@@ -318,10 +313,10 @@ button:hover { background: #123a91; }
         <?php endforeach; ?>
     </div>
 
-    <label>Feedback / Comments (Optional):</label>
+    <label for="remarks">Feedback / Comments <span style="font-weight:400;color:#718397">(Optional)</span></label>
     <textarea name="remarks" placeholder="Your feedback helps us improve"></textarea>
 
-    <button type="submit">Submit</button>
+    <button type="submit">Submit Registration</button>
 
     <?php if ($message): ?>
         <p class="message"><?= htmlspecialchars($message) ?></p>
@@ -334,6 +329,19 @@ button:hover { background: #123a91; }
 </form>
 
 <script>
+/* ---------- ACCOUNT NUMBER VALIDATION ---------- */
+const accountInput=document.getElementById("account_number");
+accountInput.addEventListener("input",()=>{
+    accountInput.value=accountInput.value.replace(/\\D/g,"").slice(0,13);
+    accountInput.setCustomValidity("");
+});
+accountInput.addEventListener("invalid",()=>{
+    if(accountInput.value && !/^187870[0-9]{3,7}$/.test(accountInput.value)){
+        accountInput.setCustomValidity("Incorrect account number. SkyTruFiber subscriber numbers must start with 187870 and contain 9 to 13 digits.");
+    }
+});
+accountInput.addEventListener("input",()=>accountInput.setCustomValidity(""));
+
 /* ---------- BARANGAY SEARCH SYSTEM ---------- */
 const barangays = {
   "District 1": [
@@ -394,6 +402,7 @@ searchInput.addEventListener("focus", () => {
 
 /* Live search */
 searchInput.addEventListener("input", () => {
+    hiddenBarangay.value = "";
     populateDropdown(searchInput.value.toLowerCase());
     dropdownList.style.display = "block";
 });
