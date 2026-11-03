@@ -1,0 +1,6 @@
+/vendor/
+/.env
+/.env.*
+!/.env.example
+*.log
+/SKYTRUFIBER/chat/php_errors.log
