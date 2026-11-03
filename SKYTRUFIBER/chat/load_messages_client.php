@@ -2,7 +2,7 @@
 ini_set("log_errors", 1);
 ini_set("error_log", __DIR__ . "/php_errors.log");
 
-if (!isset($_SESSION)) session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
 require_once __DIR__ . "/../../db_connect.php";
 
