@@ -226,6 +226,18 @@ function appendClientBubble(msg) {
 }
 
 
+
+/* Friendly first-contact state when a ticket has no messages yet. */
+function emptyChatState() {
+    return `
+        <div class="empty-chat-state" role="status">
+            <div class="empty-chat-icon"><i class="fa-regular fa-comments"></i></div>
+            <h3>Welcome to SkyTruFiber Support</h3>
+            <p>Send us a message about your connection or service concern. Our support team will assist you as soon as possible.</p>
+        </div>
+    `;
+}
+
 /* ============================================================
 LOAD MESSAGES (FULL)
 ============================================================ */
@@ -238,7 +250,7 @@ function loadMessages(scrollBottom = false) {
             return;
         }
 
-        $("#chat-messages").html(html);
+        $("#chat-messages").html(html.trim() ? html : emptyChatState());
 
         bindActionToolbar();
 
@@ -263,6 +275,10 @@ function fetchNewMessages() {
         $("#chat-messages .temp-msg").remove();
 
         const temp = $("<div>").html(html);
+
+        if (!temp.find(".message").length && !$("#chat-messages .message").length) {
+            $("#chat-messages").html(emptyChatState());
+        }
 
         temp.find(".message").each(function () {
             const id = $(this).data("msg-id");
