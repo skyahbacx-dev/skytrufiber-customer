@@ -176,6 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/png" href="/SKYTRUFIBER.png">
+<link rel="apple-touch-icon" href="/SKYTRUFIBER.png">
 <meta charset="UTF-8">
 <title>Customer Registration – SkyTruFiber</title>
 <!-- Standalone portal styling is contained in this page; no main-site CSS dependency. -->
