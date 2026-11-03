@@ -15,6 +15,25 @@ if (!$registrationAllowed || !is_string($source) || !in_array($source, ['QR Code
 
 require_once __DIR__ . '/../db_connect.php';
 
+/* Keep submitted values when validation fails. */
+$formData = [
+    'account_number' => '',
+    'full_name' => '',
+    'email' => '',
+    'district' => '',
+    'location' => '',
+    'date_installed' => '',
+    'remarks' => '',
+    'rating' => ''
+];
+
+/* Server-side district/barangay allowlist; never trust the browser's hidden field. */
+$allowedBarangays = [
+    'District 1' => ["Alicia (Bago Bantay)","Bagong Pag-asa","Bahay Toro","Balingasa","Bungad","Damar","Damayan","Del Monte","Katipunan","Lourdes","Maharlika","Manresa","Mariblo","Masambong","N.S. Amoranto","Nayong Kanluran","Paang Bundok","Pag-ibig sa Nayon","Paltok","Paraiso","Phil-Am","Project 6","Ramon Magsaysay","Saint Peter","Salvacion","San Antonio","San Isidro Labrador","San Jose","Santa Cruz","Santa Teresita","Santo Domingo","Siena","Sto. Cristo","Talayan","Vasra","Veterans Village","West Triangle"],
+    'District 3' => ["Camp Aguinaldo","Pansol","Mangga","San Roque","Silangan","Socorro","Bagumbayan","Libis","Ugong Norte","Masagana","Loyola Heights","Matandang Balara","East Kamias","Quirino 2-A","Quirino 2-B","Quirino 2-C","Amihan","Claro","Duyan-duyan","Quirino 3-A","Bagumbuhay","Bayanihan","Blue Ridge A","Blue Ridge B","Dioquino Zobel","Escopa I","Escopa II","Escopa III","Escopa IV","Marilag","Milagrosa","Tagumpay","Villa Maria Clara","E. Rodriguez","West Kamias","St. Ignatius","White Plains"],
+    'District 4' => ["Bagong Lipunan ng Crame","Botocan","Central","Damayang Lagi","Don Manuel","Doña Aurora","Doña Imelda","Doña Josefa","Horseshoe","Immaculate Concepcion","Kalusugan","Kamuning","Kaunlaran","Kristong Hari","Krus na Ligas","Laging Handa","Malaya","Mariana","Obrero","Old Capitol Site","Paligsahan","Pinagkaisahan","Pinyahan","Roxas","Sacred Heart","San Isidro Galas","San Martin de Porres","San Vicente","Santol","Sikatuna Village","South Triangle","Sto. Niño","Tatalon","Teacher's Village East","Teacher's Village West","U.P. Campus","U.P. Village","Valencia"]
+];
+
 /* ============================================================
    FORM SUBMISSION HANDLER
 ============================================================ */
@@ -31,11 +50,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password       = $account_number;
     $postedCsrf     = $_POST['csrf'] ?? '';
 
-    if (!is_string($postedCsrf) || !hash_equals($_SESSION['registration_csrf'] ?? '', $postedCsrf)) {
+    $formData = [
+        'account_number' => $account_number,
+        'full_name' => $full_name,
+        'email' => $email,
+        'district' => $district,
+        'location' => $barangay,
+        'date_installed' => $date_installed,
+        'remarks' => $remarks,
+        'rating' => $rating === null ? '' : (string)$rating
+    ];
+
+    $validDate = DateTime::createFromFormat('!Y-m-d', $date_installed);
+    $dateIsValid = $validDate && $validDate->format('Y-m-d') === $date_installed
+        && $date_installed <= date('Y-m-d');
+    $barangayIsValid = isset($allowedBarangays[$district])
+        && in_array($barangay, $allowedBarangays[$district], true);
+
+    if (!is_string($postedCsrf) || !isset($_SESSION['registration_csrf']) || !hash_equals($_SESSION['registration_csrf'], $postedCsrf)) {
         $message = "Your session expired. Please refresh the page and try again.";
     } elseif (!preg_match('/^187870[0-9]{3,7}$/', $account_number)) {
         $message = "Invalid account number. SkyTruFiber subscriber account numbers must start with 187870. Please check your bill or account details and enter the correct number.";
-    } elseif ($full_name && filter_var($email, FILTER_VALIDATE_EMAIL) && in_array($district, ['District 1', 'District 3', 'District 4'], true) && $barangay && $date_installed && $rating >= 1 && $rating <= 5) {
+    } elseif ($full_name === '' || mb_strlen($full_name) > 120) {
+        $message = "Please enter your full name (up to 120 characters).";
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
+        $message = "Please enter a valid email address.";
+    } elseif (!$barangayIsValid) {
+        $message = "Please select a valid barangay for your chosen district.";
+    } elseif (!$dateIsValid) {
+        $message = "Please enter a valid installation date. Future dates are not allowed.";
+    } elseif ($rating === null || $rating < 1 || $rating > 5) {
+        $message = "Please select a service satisfaction rating.";
+    } elseif (mb_strlen($remarks) > 2000) {
+        $message = "Feedback must be 2,000 characters or fewer.";
+    } else {
 
         try {
             /* Prevent duplicates */
@@ -269,37 +317,37 @@ button:disabled{opacity:.65;cursor:not-allowed}
 
     <div class="section-title">Subscriber Information</div>
     <label for="account_number">Account Number</label>
-    <input id="account_number" type="text" name="account_number" minlength="9" maxlength="13"
+    <input id="account_number" type="text" name="account_number" value="<?= htmlspecialchars($formData['account_number'], ENT_QUOTES, 'UTF-8') ?>" minlength="9" maxlength="13"
            inputmode="numeric" autocomplete="off" pattern="187870[0-9]{3,7}"
            title="Your account number must start with 187870 and contain 9 to 13 digits."
            placeholder="187870XXXXX" aria-describedby="accountHelp" required>
     <div class="account-hint" id="accountHelp"><strong>Important</strong><span>SkyTruFiber subscriber account numbers must start with <strong>187870</strong>. Enter the complete number shown on your bill or subscriber record (9–13 digits).</span></div>
 
     <label for="full_name">Full Name</label>
-    <input type="text" name="full_name" placeholder="Enter full name" required>
+    <input type="text" name="full_name" value="<?= htmlspecialchars($formData['full_name'], ENT_QUOTES, 'UTF-8') ?>" maxlength="120" autocomplete="name" placeholder="Enter full name" required>
 
     <label for="email">Email Address</label>
-    <input type="email" name="email" placeholder="example@email.com" required>
+    <input type="email" name="email" value="<?= htmlspecialchars($formData['email'], ENT_QUOTES, 'UTF-8') ?>" maxlength="254" autocomplete="email" placeholder="example@email.com" required>
 
     <div class="section-title">Service Location</div>
     <label for="district">District</label>
     <select id="district" name="district" required>
         <option value="">Select District</option>
-        <option value="District 1">District 1</option>
-        <option value="District 3">District 3</option>
-        <option value="District 4">District 4</option>
+        <option value="District 1" <?= $formData['district'] === 'District 1' ? 'selected' : '' ?>>District 1</option>
+        <option value="District 3" <?= $formData['district'] === 'District 3' ? 'selected' : '' ?>>District 3</option>
+        <option value="District 4" <?= $formData['district'] === 'District 4' ? 'selected' : '' ?>>District 4</option>
     </select>
 
     <label for="barangaySelector">Barangay</label>
     <span class="field-help">Choose your district first, then search and select your barangay from the list.</span>
     <div class="dropdown-wrapper">
-        <input type="text" id="barangaySelector" class="searchable-select" placeholder="Search or select barangay..." autocomplete="off">
-        <input type="hidden" id="location" name="location" required>
+        <input type="text" id="barangaySelector" class="searchable-select" value="<?= htmlspecialchars($formData['location'], ENT_QUOTES, 'UTF-8') ?>" placeholder="Search or select barangay..." autocomplete="off" aria-label="Search barangay">
+        <input type="hidden" id="location" name="location" value="<?= htmlspecialchars($formData['location'], ENT_QUOTES, 'UTF-8') ?>" required>
         <div id="dropdownList" class="dropdown-list"></div>
     </div>
 
     <label for="date_installed">Installation Date</label>
-    <input type="date" id="date_installed" name="date_installed" required>
+    <input type="date" id="date_installed" name="date_installed" value="<?= htmlspecialchars($formData['date_installed'], ENT_QUOTES, 'UTF-8') ?>" max="<?= date('Y-m-d') ?>" required>
 
     <div class="section-title">Service Feedback</div>
     <label>How satisfied are you with your service?</label>
@@ -307,16 +355,16 @@ button:disabled{opacity:.65;cursor:not-allowed}
         <?php $ratingFaces = [1 => '😡', 2 => '😕', 3 => '😐', 4 => '🙂', 5 => '😍']; ?>
         <?php foreach ($ratingFaces as $val => $face): ?>
             <label class="rating-option">
-                <input type="radio" name="rating" value="<?= $val ?>" required>
+                <input type="radio" name="rating" value="<?= $val ?>" <?= $formData['rating'] === (string)$val ? 'checked' : '' ?> required>
                 <span><?= $face ?></span>
             </label>
         <?php endforeach; ?>
     </div>
 
     <label for="remarks">Feedback / Comments <span style="font-weight:400;color:#718397">(Optional)</span></label>
-    <textarea name="remarks" placeholder="Your feedback helps us improve"></textarea>
+    <textarea name="remarks" maxlength="2000" placeholder="Your feedback helps us improve"><?= htmlspecialchars($formData['remarks'], ENT_QUOTES, 'UTF-8') ?></textarea>
 
-    <button type="submit">Submit Registration</button>
+    <button type="submit" id="submitRegistration">Submit Registration</button>
 
     <?php if ($message): ?>
         <p class="message"><?= htmlspecialchars($message) ?></p>
@@ -414,13 +462,31 @@ document.addEventListener("click", (e) => {
     }
 });
 
-/* Auto-fill date today */
-document.addEventListener("DOMContentLoaded", () => {
-    const d = new Date();
-    document.getElementById("date_installed").value =
-        d.getFullYear() + "-" +
-        String(d.getMonth()+1).padStart(2,"0") + "-" +
-        String(d.getDate()).padStart(2,"0");
+/* Restore selected barangay after a validation error. */
+if (districtSelect.value && hiddenBarangay.value) {
+    populateDropdown("");
+    searchInput.value = hiddenBarangay.value;
+}
+
+/* Clear barangay whenever the district changes. */
+districtSelect.addEventListener("change", () => {
+    searchInput.value = "";
+    hiddenBarangay.value = "";
+    dropdownList.style.display = "none";
+});
+
+/* Prevent accidental double submission and give immediate feedback. */
+document.querySelector("form").addEventListener("submit", (event) => {
+    if (!hiddenBarangay.value) {
+        event.preventDefault();
+        searchInput.setCustomValidity("Please select a barangay from the list.");
+        searchInput.reportValidity();
+        searchInput.addEventListener("input", () => searchInput.setCustomValidity(""), { once: true });
+        return;
+    }
+    const submitButton = document.getElementById("submitRegistration");
+    submitButton.disabled = true;
+    submitButton.textContent = "Submitting…";
 });
 </script>
 
