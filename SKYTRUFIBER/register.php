@@ -181,11 +181,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <!-- Standalone portal styling is contained in this page; no main-site CSS dependency. -->
 
 <style>
-:root{--navy:#073b70;--blue:#0879bd;--ink:#18324b;--muted:#64788b;--line:#dce6ef}
+:root{--navy:#073b70;--blue:#1a4fc4;--ink:#18324b;--muted:#64788b;--line:#dce6ef}
 *{box-sizing:border-box}
-body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(circle at top left,#dff3ff,transparent 42%),linear-gradient(135deg,#edf5fc,#f7f9fc);margin:0;min-height:100vh;padding:28px 14px;display:flex;justify-content:center;align-items:flex-start;color:var(--ink)}
-form{background:#fff;padding:clamp(22px,4vw,38px);border:1px solid #e5edf4;border-radius:22px;width:min(100%,620px);box-shadow:0 18px 55px #153b5b18;position:relative}
-@media(min-width:760px){form{margin:16px auto}}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:radial-gradient(ellipse at 50% 45%,#14327a 0%,#08142f 58%,#050c1e 100%);background-attachment:fixed;margin:0;min-height:100vh;padding:24px 14px 40px;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;color:var(--ink);overflow-x:hidden}
+form{background:#fff;padding:clamp(22px,4vw,38px);border:1px solid #e5edf4;border-radius:22px;width:min(100%,620px);box-shadow:0 18px 55px #0005;position:relative;z-index:1;margin:0 auto 10px}
+@media(min-width:760px){form{margin:0 auto 16px}}
 @media(max-width:480px){body{padding:12px 10px}form{padding:20px 16px;border-radius:18px}}
 
 /* Logo inside form */
@@ -250,7 +250,7 @@ button {
     font-size: 17px;
     font-weight: bold;
 }
-button:hover { background: var(--navy); }
+button:hover { background: #123a91; }
 button:focus-visible,a:focus-visible{outline:3px solid #8bcfff;outline-offset:3px}
 button:disabled{opacity:.65;cursor:not-allowed}
 
@@ -299,6 +299,15 @@ button:disabled{opacity:.65;cursor:not-allowed}
     background: #e8eefc;
 }
 .rating-option:hover { border-color: #1a4fc4; }
+
+/* Login-page fibre background and floating logo */
+#fx{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:0;transition:opacity 1.2s ease}
+#fx.on{opacity:1}
+.coin-anchor{display:none;flex:none;width:clamp(120px,22vh,180px);height:clamp(120px,22vh,180px);margin:4px 0 14px;pointer-events:none;position:relative;z-index:1}
+.fx-on .coin-anchor{display:block}
+.fx-on .logo-inside{display:none}
+@media(max-width:480px){body{padding:18px 10px 30px}.coin-anchor{width:116px;height:116px;margin-bottom:12px}form{padding:20px 16px}}
+@media(prefers-reduced-motion:reduce){#fx{transition:none}}
 </style>
 
 </head>
