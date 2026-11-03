@@ -71,7 +71,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Your session expired. Please refresh the page and try again.";
     } elseif (!preg_match('/^187870[0-9]{3,7}$/', $account_number)) {
         $message = "Invalid account number. SkyTruFiber subscriber account numbers must start with 187870. Please check your bill or account details and enter the correct number.";
-    } elseif ($full_name === '' || mb_strlen($full_name) > 120) {
+    } elseif ($full_name === '' || strlen($full_name) > 120) {
         $message = "Please enter your full name (up to 120 characters).";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL) || strlen($email) > 254) {
         $message = "Please enter a valid email address.";
@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $message = "Please enter a valid installation date. Future dates are not allowed.";
     } elseif ($rating === null || $rating < 1 || $rating > 5) {
         $message = "Please select a service satisfaction rating.";
-    } elseif (mb_strlen($remarks) > 2000) {
+    } elseif (strlen($remarks) > 2000) {
         $message = "Feedback must be 2,000 characters or fewer.";
     } else {
 
