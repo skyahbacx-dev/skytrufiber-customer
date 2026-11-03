@@ -271,7 +271,7 @@ button:hover { background: #123a91; }
 <form method="POST">
 
     <div class="logo-inside">
-        <img src="../SKYTRUFIBER.png" alt="SkyTruFiber Logo">
+        <img src="/SKYTRUFIBER.png" alt="SkyTruFiber Logo">
     </div>
 
     <h2>Customer Registration & Feedback</h2>
