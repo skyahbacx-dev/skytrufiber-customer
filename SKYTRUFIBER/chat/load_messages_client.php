@@ -7,7 +7,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once __DIR__ . "/../../db_connect.php";
 
 $ticketId = intval($_POST["ticket"] ?? 0);
-if ($ticketId <= 0) exit("");
+if ($ticketId <= 0) { http_response_code(400); exit("CHAT_INVALID_TICKET"); }
 
 // ---------------------------------------------
 // FETCH TICKET
@@ -21,7 +21,9 @@ $stmt = $conn->prepare("
 $stmt->execute([$ticketId]);
 $ticket = $stmt->fetch(PDO::FETCH_ASSOC);
 
-if (!$ticket || empty($_SESSION["client_id"]) || (int)$ticket["client_id"] !== (int)$_SESSION["client_id"]) exit("");
+if (empty($_SESSION["client_id"])) { http_response_code(401); exit("CHAT_SESSION_MISSING"); }
+if (!$ticket) { http_response_code(404); exit("CHAT_TICKET_NOT_FOUND"); }
+if ((int)$ticket["client_id"] !== (int)$_SESSION["client_id"]) { http_response_code(403); exit("CHAT_TICKET_MISMATCH"); }
 
 // AUTO LOGOUT WHEN RESOLVED
 if ($ticket["status"] === "resolved") {
