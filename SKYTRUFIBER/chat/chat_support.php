@@ -86,12 +86,12 @@ try {
         <div class="chat-header">
 
             <div class="chat-header-left">
-                <img src="/SKYTRUFIBER.png" class="chat-header-logo">
+                <img src="/SKYTRUFIBER.png" class="chat-header-logo" alt="SkyTruFiber logo">
 
                 <div class="header-info">
                     <h2>SkyTruFiber Support</h2>
 
-                    <span class="status active">Support Team Active</span>
+                    <span class="status active"><span class="status-dot"></span> Here to help</span>
 
                     <span id="ticket-status-label"
                           class="ticket-label"
@@ -104,13 +104,13 @@ try {
             <div class="chat-header-right">
 
                 <!-- THEME BUTTON -->
-                <button id="theme-toggle" class="theme-toggle">
+                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
                     <i class="fa-solid fa-moon theme-icon moon-icon"></i>
                     <i class="fa-solid fa-sun theme-icon sun-icon"></i>
                 </button>
 
                 <!-- LOGOUT BUTTON -->
-                     <button id="logout-btn" class="logout-btn"> 
+                     <button id="logout-btn" class="logout-btn" type="button"> 
                     <i class="fa-solid fa-right-from-bracket"></i> Logout
                 </button>
 
@@ -130,11 +130,12 @@ try {
             <div class="chat-input-box">
                 <input id="message-input"
                        type="text"
+                       aria-label="Write a message"
                        placeholder="Type a message..."
                        autocomplete="off">
             </div>
 
-            <button id="send-btn" class="chat-send-btn">
+            <button id="send-btn" class="chat-send-btn" type="button" aria-label="Send message" title="Send message">
                 <i class="fa-solid fa-paper-plane"></i>
             </button>
         </div>
