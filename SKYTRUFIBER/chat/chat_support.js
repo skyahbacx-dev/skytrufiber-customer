@@ -241,20 +241,52 @@ function emptyChatState() {
 /* ============================================================
 LOAD MESSAGES (FULL)
 ============================================================ */
-function loadMessages(scrollBottom = false) {
-    $.post("/SKYTRUFIBER/chat/load_messages_client.php", { ticket: ticketId })
-    .done(html => {
+function showChatLoadError(message) {
+    $("#chat-messages").html(
+        '<div class="system-message" role="alert">' +
+        '<strong>Unable to load this conversation.</strong><br>' +
+        message +
+        '<br><small>Please refresh. If this continues, contact support.</small></div>'
+    );
+}
 
-        if (html.trim() === "FORCE_LOGOUT") {
+function loadMessages(scrollBottom = false) {
+    $.ajax({
+        url: "/SKYTRUFIBER/chat/load_messages_client.php",
+        method: "POST",
+        data: { ticket: ticketId },
+        cache: false,
+        dataType: "html"
+    })
+    .done(html => {
+        const response = (html || "").trim();
+
+        if (response === "FORCE_LOGOUT") {
             window.location.href = "/SKYTRUFIBER/chat/logout.php";
             return;
         }
+        if (response === "CHAT_SESSION_MISSING") {
+            showChatLoadError("Your support session has expired. Please log in again.");
+            return;
+        }
+        if (response === "CHAT_TICKET_MISMATCH" || response === "CHAT_TICKET_NOT_FOUND" || response === "CHAT_INVALID_TICKET") {
+            showChatLoadError("This ticket could not be matched to your account. Please log out and log in again.");
+            return;
+        }
 
-        $("#chat-messages").html(html.trim() ? html : emptyChatState());
-
+        $("#chat-messages").html(response ? html : emptyChatState());
         bindActionToolbar();
-
         if (scrollBottom) scrollToBottom();
+    })
+    .fail(xhr => {
+        const code = (xhr.responseText || "").trim();
+        if (code === "CHAT_SESSION_MISSING") {
+            showChatLoadError("Your support session has expired. Please log in again.");
+        } else if (code === "CHAT_TICKET_MISMATCH" || code === "CHAT_TICKET_NOT_FOUND") {
+            showChatLoadError("This ticket could not be matched to your account. Please log out and log in again.");
+        } else {
+            showChatLoadError("The message service returned an error (" + xhr.status + ").");
+        }
     });
 }
 
