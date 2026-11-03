@@ -4,6 +4,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link rel="icon" type="image/png" href="/SKYTRUFIBER.png">
+<link rel="apple-touch-icon" href="/SKYTRUFIBER.png">
 <meta charset="UTF-8">
 <title>Registration Successful</title>
 
