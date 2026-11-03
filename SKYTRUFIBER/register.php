@@ -29,9 +29,12 @@ $formData = [
 
 /* Server-side district/barangay allowlist; never trust the browser's hidden field. */
 $allowedBarangays = [
-    'District 1' => ["Alicia (Bago Bantay)","Bagong Pag-asa","Bahay Toro","Balingasa","Bungad","Damar","Damayan","Del Monte","Katipunan","Lourdes","Maharlika","Manresa","Mariblo","Masambong","N.S. Amoranto","Nayong Kanluran","Paang Bundok","Pag-ibig sa Nayon","Paltok","Paraiso","Phil-Am","Project 6","Ramon Magsaysay","Saint Peter","Salvacion","San Antonio","San Isidro Labrador","San Jose","Santa Cruz","Santa Teresita","Santo Domingo","Siena","Sto. Cristo","Talayan","Vasra","Veterans Village","West Triangle"],
-    'District 3' => ["Camp Aguinaldo","Pansol","Mangga","San Roque","Silangan","Socorro","Bagumbayan","Libis","Ugong Norte","Masagana","Loyola Heights","Matandang Balara","East Kamias","Quirino 2-A","Quirino 2-B","Quirino 2-C","Amihan","Claro","Duyan-duyan","Quirino 3-A","Bagumbuhay","Bayanihan","Blue Ridge A","Blue Ridge B","Dioquino Zobel","Escopa I","Escopa II","Escopa III","Escopa IV","Marilag","Milagrosa","Tagumpay","Villa Maria Clara","E. Rodriguez","West Kamias","St. Ignatius","White Plains"],
-    'District 4' => ["Bagong Lipunan ng Crame","Botocan","Central","Damayang Lagi","Don Manuel","Doña Aurora","Doña Imelda","Doña Josefa","Horseshoe","Immaculate Concepcion","Kalusugan","Kamuning","Kaunlaran","Kristong Hari","Krus na Ligas","Laging Handa","Malaya","Mariana","Obrero","Old Capitol Site","Paligsahan","Pinagkaisahan","Pinyahan","Roxas","Sacred Heart","San Isidro Galas","San Martin de Porres","San Vicente","Santol","Sikatuna Village","South Triangle","Sto. Niño","Tatalon","Teacher's Village East","Teacher's Village West","U.P. Campus","U.P. Village","Valencia"]
+    'District 1' => ["Alicia","Bagong Pag-asa","Bahay Toro","Balingasa","Bungad","Damar","Damayan","Del Monte","Katipunan","Lourdes","Maharlika","Manresa","Mariblo","Masambong","N.S. Amoranto (Gintong Silahis)","Nayong Kanluran","Paang Bundok","Pag-ibig sa Nayon","Paltok","Paraiso","Phil-Am","Project 6","Ramon Magsaysay","Saint Peter","Salvacion","San Antonio","San Isidro Labrador","San Jose","Santa Cruz","Santa Teresita","Sto. Cristo","Santo Domingo (Matalahib)","Siena","Talayan","Vasra","Veterans Village","West Triangle"],
+    'District 2' => ["Bagong Silangan","Batasan Hills","Commonwealth","Holy Spirit","Payatas"],
+    'District 3' => ["Amihan","Bagumbayan","Bagumbuhay","Bayanihan","Blue Ridge A","Blue Ridge B","Camp Aguinaldo","Claro (Quirino 3-B)","Dioquino Zobel","Duyan-duyan","E. Rodriguez","East Kamias","Escopa I","Escopa II","Escopa III","Escopa IV","Libis","Loyola Heights","Mangga","Marilag","Masagana","Matandang Balara","Milagrosa","Pansol","Quirino 2-A","Quirino 2-B","Quirino 2-C","Quirino 3-A","St. Ignatius","San Roque","Silangan","Socorro","Tagumpay","Ugong Norte","Villa Maria Clara","West Kamias","White Plains"],
+    'District 4' => ["Bagong Lipunan ng Crame","Botocan","Central","Damayang Lagi","Don Manuel","Doña Aurora","Doña Imelda","Doña Josefa","Horseshoe","Immaculate Concepcion","Kalusugan","Kamuning","Kaunlaran","Kristong Hari","Krus na Ligas","Laging Handa","Malaya","Mariana","Obrero","Old Capitol Site","Paligsahan","Pinagkaisahan","Pinyahan","Roxas","Sacred Heart","San Isidro Galas","San Martin de Porres","San Vicente","Santol","Sikatuna Village","South Triangle","Sto. Niño","Tatalon","Teacher's Village East","Teacher's Village West","U.P. Campus","U.P. Village","Valencia","San Juan","San Roque","Santa Mesa Heights"],
+    'District 5' => ["Bagbag","Capri","Fairview","Greater Lagro","Gulod","Kaligayahan","Nagkaisang Nayon","North Fairview","Novaliches Proper","Pasong Putik Proper","San Agustin","San Bartolome","Sta. Lucia","Sta. Monica"],
+    'District 6' => ["Apolonio Samson","Baesa","Balong Bato","Culiat","New Era","Pasong Tamo","Sangandaan","Sauyo","Talipapa","Tandang Sora","Unang Sigaw"]
 ];
 
 /* ============================================================
@@ -69,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!is_string($postedCsrf) || !isset($_SESSION['registration_csrf']) || !hash_equals($_SESSION['registration_csrf'], $postedCsrf)) {
         $message = "Your session expired. Please refresh the page and try again.";
-    } elseif (!preg_match('/^187870[0-9]{3,7}$/', $account_number)) {
+    } elseif (!preg_match('/^187870[0-9]{7}$/', $account_number)) {
         $message = "Invalid account number. SkyTruFiber subscriber account numbers must start with 187870. Please check your bill or account details and enter the correct number.";
     } elseif ($full_name === '' || strlen($full_name) > 120) {
         $message = "Please enter your full name (up to 120 characters).";
@@ -317,11 +320,11 @@ button:disabled{opacity:.65;cursor:not-allowed}
 
     <div class="section-title">Subscriber Information</div>
     <label for="account_number">Account Number</label>
-    <input id="account_number" type="text" name="account_number" value="<?= htmlspecialchars($formData['account_number'], ENT_QUOTES, 'UTF-8') ?>" minlength="9" maxlength="13"
+    <input id="account_number" type="text" name="account_number" value="<?= htmlspecialchars($formData['account_number'], ENT_QUOTES, 'UTF-8') ?>" minlength="13" maxlength="13"
            inputmode="numeric" autocomplete="off" pattern="187870[0-9]{3,7}"
-           title="Your account number must start with 187870 and contain 9 to 13 digits."
+           title="Your account number must start with 187870 and contain exactly 13 digits."
            placeholder="187870XXXXX" aria-describedby="accountHelp" required>
-    <div class="account-hint" id="accountHelp"><strong>Important</strong><span>SkyTruFiber subscriber account numbers must start with <strong>187870</strong>. Enter the complete number shown on your bill or subscriber record (9–13 digits).</span></div>
+    <div class="account-hint" id="accountHelp"><strong>Important</strong><span>SkyTruFiber subscriber account numbers must start with <strong>187870</strong>. Enter the complete number shown on your bill or subscriber record (exactly 13 digits).</span></div>
 
     <label for="full_name">Full Name</label>
     <input type="text" name="full_name" value="<?= htmlspecialchars($formData['full_name'], ENT_QUOTES, 'UTF-8') ?>" maxlength="120" autocomplete="name" placeholder="Enter full name" required>
@@ -333,9 +336,9 @@ button:disabled{opacity:.65;cursor:not-allowed}
     <label for="district">District</label>
     <select id="district" name="district" required>
         <option value="">Select District</option>
-        <option value="District 1" <?= $formData['district'] === 'District 1' ? 'selected' : '' ?>>District 1</option>
-        <option value="District 3" <?= $formData['district'] === 'District 3' ? 'selected' : '' ?>>District 3</option>
-        <option value="District 4" <?= $formData['district'] === 'District 4' ? 'selected' : '' ?>>District 4</option>
+        <?php for ($districtNumber = 1; $districtNumber <= 6; $districtNumber++): $districtOption = 'District ' . $districtNumber; ?>
+            <option value="<?= $districtOption ?>" <?= $formData['district'] === $districtOption ? 'selected' : '' ?>><?= $districtOption ?></option>
+        <?php endfor; ?>
     </select>
 
     <label for="barangaySelector">Barangay</label>
@@ -384,37 +387,20 @@ accountInput.addEventListener("input",()=>{
     accountInput.setCustomValidity("");
 });
 accountInput.addEventListener("invalid",()=>{
-    if(accountInput.value && !/^187870[0-9]{3,7}$/.test(accountInput.value)){
-        accountInput.setCustomValidity("Incorrect account number. SkyTruFiber subscriber numbers must start with 187870 and contain 9 to 13 digits.");
+    if(accountInput.value && !/^187870[0-9]{7}$/.test(accountInput.value)){
+        accountInput.setCustomValidity("Incorrect account number. SkyTruFiber subscriber numbers must start with 187870 and contain exactly 13 digits.");
     }
 });
 accountInput.addEventListener("input",()=>accountInput.setCustomValidity(""));
 
 /* ---------- BARANGAY SEARCH SYSTEM ---------- */
 const barangays = {
-  "District 1": [
-"Alicia (Bago Bantay)","Bagong Pag-asa","Bahay Toro","Balingasa","Bungad","Damar","Damayan",
-"Del Monte","Katipunan","Lourdes","Maharlika","Manresa","Mariblo","Masambong",
-"N.S. Amoranto","Nayong Kanluran","Paang Bundok","Pag-ibig sa Nayon","Paltok","Paraiso",
-"Phil-Am","Project 6","Ramon Magsaysay","Saint Peter","Salvacion","San Antonio",
-"San Isidro Labrador","San Jose","Santa Cruz","Santa Teresita","Santo Domingo","Siena",
-"Sto. Cristo","Talayan","Vasra","Veterans Village","West Triangle"
-  ],
-  "District 3": [
-"Camp Aguinaldo","Pansol","Mangga","San Roque","Silangan","Socorro","Bagumbayan","Libis","Ugong Norte",
-"Masagana","Loyola Heights","Matandang Balara","East Kamias","Quirino 2-A","Quirino 2-B","Quirino 2-C",
-"Amihan","Claro","Duyan-duyan","Quirino 3-A","Bagumbuhay","Bayanihan","Blue Ridge A","Blue Ridge B",
-"Dioquino Zobel","Escopa I","Escopa II","Escopa III","Escopa IV","Marilag","Milagrosa","Tagumpay",
-"Villa Maria Clara","E. Rodriguez","West Kamias","St. Ignatius","White Plains"
-  ],
-  "District 4": [
-"Bagong Lipunan ng Crame","Botocan","Central","Damayang Lagi","Don Manuel","Doña Aurora","Doña Imelda",
-"Doña Josefa","Horseshoe","Immaculate Concepcion","Kalusugan","Kamuning","Kaunlaran","Kristong Hari",
-"Krus na Ligas","Laging Handa","Malaya","Mariana","Obrero","Old Capitol Site","Paligsahan",
-"Pinagkaisahan","Pinyahan","Roxas","Sacred Heart","San Isidro Galas","San Martin de Porres",
-"San Vicente","Santol","Sikatuna Village","South Triangle","Sto. Niño","Tatalon",
-"Teacher's Village East","Teacher's Village West","U.P. Campus","U.P. Village","Valencia"
-  ]
+  "District 1": ["Alicia","Bagong Pag-asa","Bahay Toro","Balingasa","Bungad","Damar","Damayan","Del Monte","Katipunan","Lourdes","Maharlika","Manresa","Mariblo","Masambong","N.S. Amoranto (Gintong Silahis)","Nayong Kanluran","Paang Bundok","Pag-ibig sa Nayon","Paltok","Paraiso","Phil-Am","Project 6","Ramon Magsaysay","Saint Peter","Salvacion","San Antonio","San Isidro Labrador","San Jose","Santa Cruz","Santa Teresita","Sto. Cristo","Santo Domingo (Matalahib)","Siena","Talayan","Vasra","Veterans Village","West Triangle"],
+  "District 2": ["Bagong Silangan","Batasan Hills","Commonwealth","Holy Spirit","Payatas"],
+  "District 3": ["Amihan","Bagumbayan","Bagumbuhay","Bayanihan","Blue Ridge A","Blue Ridge B","Camp Aguinaldo","Claro (Quirino 3-B)","Dioquino Zobel","Duyan-duyan","E. Rodriguez","East Kamias","Escopa I","Escopa II","Escopa III","Escopa IV","Libis","Loyola Heights","Mangga","Marilag","Masagana","Matandang Balara","Milagrosa","Pansol","Quirino 2-A","Quirino 2-B","Quirino 2-C","Quirino 3-A","St. Ignatius","San Roque","Silangan","Socorro","Tagumpay","Ugong Norte","Villa Maria Clara","West Kamias","White Plains"],
+  "District 4": ["Bagong Lipunan ng Crame","Botocan","Central","Damayang Lagi","Don Manuel","Doña Aurora","Doña Imelda","Doña Josefa","Horseshoe","Immaculate Concepcion","Kalusugan","Kamuning","Kaunlaran","Kristong Hari","Krus na Ligas","Laging Handa","Malaya","Mariana","Obrero","Old Capitol Site","Paligsahan","Pinagkaisahan","Pinyahan","Roxas","Sacred Heart","San Isidro Galas","San Martin de Porres","San Vicente","Santol","Sikatuna Village","South Triangle","Sto. Niño","Tatalon","Teacher's Village East","Teacher's Village West","U.P. Campus","U.P. Village","Valencia","San Juan","San Roque","Santa Mesa Heights"],
+  "District 5": ["Bagbag","Capri","Fairview","Greater Lagro","Gulod","Kaligayahan","Nagkaisang Nayon","North Fairview","Novaliches Proper","Pasong Putik Proper","San Agustin","San Bartolome","Sta. Lucia","Sta. Monica"],
+  "District 6": ["Apolonio Samson","Baesa","Balong Bato","Culiat","New Era","Pasong Tamo","Sangandaan","Sauyo","Talipapa","Tandang Sora","Unang Sigaw"]
 };
 
 const districtSelect = document.getElementById("district");
