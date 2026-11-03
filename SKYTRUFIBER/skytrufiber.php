@@ -37,47 +37,57 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
 
                 session_regenerate_id(true);
 
-                /* Fetch last ticket */
-                $ticketStmt = $conn->prepare("
-                    SELECT id, status
-                    FROM tickets
-                    WHERE client_id = :cid
-                    ORDER BY created_at DESC
-                    LIMIT 1
-                ");
-                $ticketStmt->execute([':cid' => $user['id']]);
-                $lastTicket = $ticketStmt->fetch(PDO::FETCH_ASSOC);
-
                 /* ============================================================
-                   CREATE NEW TICKET + INSERT CSR GREETING
+                   ONE ACTIVE TICKET PER CUSTOMER
+                   A transaction-scoped advisory lock serializes simultaneous
+                   login attempts; the partial unique index is the DB backstop.
                 ============================================================ */
-                if (!$lastTicket || $lastTicket['status'] === 'resolved') {
+                $conn->beginTransaction();
+                try {
+                    $lock = $conn->prepare("SELECT pg_advisory_xact_lock(hashtextextended(:client_key, 0))");
+                    $lock->execute([':client_key' => (string)$user['id']]);
 
-                    $newTicket = $conn->prepare("
-                        INSERT INTO tickets (client_id, status, created_at)
-                        VALUES (:cid, 'pending', NOW())
+                    $ticketStmt = $conn->prepare("
+                        SELECT id, status
+                        FROM tickets
+                        WHERE client_id = :cid
+                          AND LOWER(status) <> 'resolved'
+                        ORDER BY created_at DESC, id DESC
+                        LIMIT 1
+                        FOR UPDATE
                     ");
-                    $newTicket->execute([':cid' => $user['id']]);
-                    $ticketId = $conn->lastInsertId();
+                    $ticketStmt->execute([':cid' => $user['id']]);
+                    $activeTicket = $ticketStmt->fetch(PDO::FETCH_ASSOC);
 
-                    /* Personalized CSR Greeting (FULL NAME) */
-                 $csrGreeting = "Hello {$user['full_name']}! This is SkyTruFiber Support. How may I assist you today?";
+                    if ($activeTicket) {
+                        $ticketId = (int)$activeTicket['id'];
+                        unset($_SESSION['show_suggestions']);
+                    } else {
+                        $newTicket = $conn->prepare("
+                            INSERT INTO tickets (client_id, status, created_at)
+                            VALUES (:cid, 'pending', NOW())
+                            RETURNING id
+                        ");
+                        $newTicket->execute([':cid' => $user['id']]);
+                        $ticketId = (int)$newTicket->fetchColumn();
 
-                  $greet = $conn->prepare("
-                   INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, seen, created_at)
-                   VALUES (:tid, NULL, 'csr', :msg, TRUE, TRUE, NOW())
-                  ");
+                        $csrGreeting = "Hello {$user['full_name']}! This is SkyTruFiber Support. How may I assist you today?";
+                        $greet = $conn->prepare("
+                            INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, seen, created_at)
+                            VALUES (:tid, NULL, 'csr', :msg, TRUE, TRUE, NOW())
+                        ");
+                        $greet->execute([
+                            ':tid' => $ticketId,
+                            ':msg' => $csrGreeting
+                        ]);
 
-                  $greet->execute([
-                   ':tid' => $ticketId,
-                   ':msg' => $csrGreeting
-                  ]);
+                        $_SESSION['show_suggestions'] = true;
+                    }
 
-
-                    $_SESSION['show_suggestions'] = true;
-
-                } else {
-                    $ticketId = $lastTicket['id'];
+                    $conn->commit();
+                } catch (Throwable $ticketError) {
+                    if ($conn->inTransaction()) $conn->rollBack();
+                    throw $ticketError;
                 }
 
                 /* Save session */
