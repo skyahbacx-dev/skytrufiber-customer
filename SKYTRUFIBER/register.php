@@ -1,19 +1,19 @@
 <?php
 session_start();
-require_once __DIR__ . '/../db_connect.php';
 
 $message = '';
-$source = $_GET['source'] ?? '';
+$source = $_SESSION['registration_source'] ?? '';
+$registrationStarted = (int)($_SESSION['registration_started_at'] ?? 0);
+$registrationAllowed = !empty($_SESSION['registration_allowed'])
+    && $registrationStarted > 0
+    && (time() - $registrationStarted) <= 1800;
 
-/* ============================================================
-   VALIDATE ONE-TIME REGISTRATION TOKEN
-============================================================ */
-$tokenProvided = $_GET['rt'] ?? '';
-$tokenStored   = $_SESSION['registration_token'] ?? null;
-
-if (!$tokenStored || $tokenProvided !== $tokenStored) {
-    die("Invalid or expired registration token.");
+if (!$registrationAllowed || !is_string($source) || !in_array($source, ['QR Code', 'Gmail', 'Others'], true)) {
+    http_response_code(403);
+    exit('Please complete the privacy consent step before registering.');
 }
+
+require_once __DIR__ . '/../db_connect.php';
 
 /* ============================================================
    FORM SUBMISSION HANDLER
@@ -29,9 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $remarks        = trim($_POST['remarks']);
     $rating         = isset($_POST['rating']) && $_POST['rating'] !== '' ? (int)$_POST['rating'] : null;
     $password       = $account_number;
-    $source         = trim($_POST['source']);
+    $postedCsrf     = $_POST['csrf'] ?? '';
 
-    if ($account_number && $full_name && $email && $district && $barangay && $date_installed) {
+    if (!is_string($postedCsrf) || !hash_equals($_SESSION['registration_csrf'] ?? '', $postedCsrf)) {
+        $message = "Your session expired. Please refresh the page and try again.";
+    } elseif ($account_number && preg_match('/^[0-9]{9,13}$/', $account_number) && $full_name && filter_var($email, FILTER_VALIDATE_EMAIL) && $district && $barangay && $date_installed && $rating >= 1 && $rating <= 5) {
 
         try {
             /* Prevent duplicates */
@@ -39,17 +41,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SELECT id FROM users 
                 WHERE account_number = :acc 
                 OR email = :email
-                OR full_name = :name
                 LIMIT 1
             ");
             $check->execute([
                 ':acc'   => $account_number,
-                ':email' => $email,
-                ':name'  => $full_name
+                ':email' => $email
             ]);
 
             if ($check->fetch()) {
-                $message = "⚠ This account number, email, or name is already registered.";
+                $message = "This account number or email is already registered.";
             } else {
 
                 $conn->beginTransaction();
@@ -103,7 +103,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $conn->commit();
 
                 /* Clear used token */
-                unset($_SESSION['registration_token']);
+                unset($_SESSION['registration_allowed'], $_SESSION['registration_source'], $_SESSION['registration_started_at'], $_SESSION['registration_csrf']);
+                session_regenerate_id(true);
 
                 /* Redirect to success page */
                 header("Location: /fiber/register/success");
@@ -111,8 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
         } catch (PDOException $e) {
-            $conn->rollBack();
-            $message = "❌ Database error: " . htmlspecialchars($e->getMessage());
+            if ($conn->inTransaction()) $conn->rollBack();
+            error_log('SkyTruFiber registration failed: ' . $e->getMessage());
+            $message = "We could not complete your registration right now. Please try again later.";
         }
 
     } else {
@@ -274,7 +276,8 @@ button:hover { background: #123a91; }
 
     <h2>Customer Registration & Feedback</h2>
 
-    <input type="hidden" name="source" value="<?= htmlspecialchars($source) ?>">
+    <input type="hidden" name="csrf" value="<?= htmlspecialchars($_SESSION['registration_csrf'], ENT_QUOTES, 'UTF-8') ?>">
+    <input type="hidden" name="source" value="<?= htmlspecialchars($source, ENT_QUOTES, 'UTF-8') ?>">
 
     <label>Account Number:</label>
     <input type="text" name="account_number" minlength="9" maxlength="13"
