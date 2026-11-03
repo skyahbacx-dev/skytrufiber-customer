@@ -2,16 +2,11 @@
 if (!isset($_SESSION)) session_start();
 require_once __DIR__ . "/../../db_connect.php";
 
-$username = trim($_POST["username"] ?? "");
-if (!$username) exit("NO_USER");
+if (empty($_SESSION["client_id"])) exit("NO_USER");
 
-// Find client
-$stmt = $conn->prepare("
-    SELECT id FROM users
-    WHERE email ILIKE ? OR full_name ILIKE ?
-    LIMIT 1
-");
-$stmt->execute([$username, $username]);
+// Only greet the authenticated customer session.
+$stmt = $conn->prepare("SELECT id FROM users WHERE id = ? LIMIT 1");
+$stmt->execute([(int)$_SESSION["client_id"]]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$user) exit("NO_CLIENT");
