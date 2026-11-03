@@ -27,6 +27,17 @@ $legacy = [
     '/fiber/load_survey.php' => '/fiber/load-survey',
     '/fiber/send_reminders.php' => '/fiber/send-reminders'
 ];
+// Explicitly allow only the customer chat's required POST/action endpoints.
+// All other internal PHP files remain blocked by the guard below.
+$chatEndpoints = [
+    '/SKYTRUFIBER/chat/load_messages_client.php' => __DIR__ . '/SKYTRUFIBER/chat/load_messages_client.php',
+    '/SKYTRUFIBER/chat/send_message_client.php' => __DIR__ . '/SKYTRUFIBER/chat/send_message_client.php',
+    '/SKYTRUFIBER/chat/get_ticket_status.php' => __DIR__ . '/SKYTRUFIBER/chat/get_ticket_status.php',
+    '/SKYTRUFIBER/chat/edit_message_client.php' => __DIR__ . '/SKYTRUFIBER/chat/edit_message_client.php',
+    '/SKYTRUFIBER/chat/delete_message_client.php' => __DIR__ . '/SKYTRUFIBER/chat/delete_message_client.php',
+    '/SKYTRUFIBER/chat/logout.php' => __DIR__ . '/SKYTRUFIBER/chat/logout.php'
+];
+if (isset($chatEndpoints[$uriPath])) { require $chatEndpoints[$uriPath]; return true; }
 if (isset($legacy[$uriPath])) { header('Location: '.$legacy[$uriPath], true, 301); exit; }
 if (isset($routes[$uriPath])) { require $routes[$uriPath]; return true; }
 // Never expose internal PHP file paths directly. Static assets remain accessible.
