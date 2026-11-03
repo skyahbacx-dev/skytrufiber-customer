@@ -170,8 +170,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $message = "We could not complete your registration right now. Please try again later.";
         }
 
-    } else {
-        $message = "Please complete all required fields using valid information.";
     }
 }
 ?>
