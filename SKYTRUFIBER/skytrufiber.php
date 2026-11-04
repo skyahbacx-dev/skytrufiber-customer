@@ -12,14 +12,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
     $input    = trim($_POST['full_name']);
     $password = $_POST['password'];
 
-    /* Proper concern handling */
-    $concern = "";
-    if (!empty($_POST['concern_text'])) {
-        $concern = trim($_POST['concern_text']);
-    } elseif (!empty($_POST['concern_dropdown']) && $_POST['concern_dropdown'] !== "others") {
-        $concern = trim($_POST['concern_dropdown']);
-    }
-
     if ($input && $password) {
 
         try {
@@ -95,19 +87,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                 $_SESSION['user'] = $user['id']; // Backward-compatible dashboard session key
                 $_SESSION['name'] = $user['full_name'];
                 $_SESSION['ticket_id'] = $ticketId;
-
-                /* Insert Client Inquiry */
-                if (!empty($concern)) {
-                    $insert = $conn->prepare("
-                        INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, created_at)
-                        VALUES (:tid, :cid, 'client', :msg, TRUE, NOW())
-                    ");
-                    $insert->execute([
-                        ':tid' => $ticketId,
-                        ':cid' => $user['id'],
-                        ':msg' => $concern
-                    ]);
-                }
 
                 header("Location: /fiber/dashboard");
                 exit;
@@ -303,6 +282,15 @@ button:hover{ background:#123a91; }
     height: auto;
     pointer-events: auto;
 }
+
+.container{border:1px solid #ffffffb8;box-shadow:0 28px 90px #020b1970,0 4px 18px #07172a22}
+.container h2{color:#0b2b50;letter-spacing:-.7px;font-weight:850}
+#loginForm input{height:52px;padding:0 16px;border:1px solid #dce5ef;border-radius:13px;background:#f8fafd}
+#loginForm input:focus{border-color:#2f83e7;box-shadow:0 0 0 4px #2f83e71a}
+#loginForm button{min-height:52px;border-radius:13px;background:linear-gradient(120deg,#1677e8,#0756c9);box-shadow:0 9px 22px #126fe52e}
+#loginForm button:hover{background:linear-gradient(120deg,#2589f3,#064db7)}
+.small-links a{color:#1268c4}
+@media(max-width:480px){.container{padding:26px 22px;border-radius:22px}}
 </style>
 </head>
 
@@ -327,20 +315,7 @@ button:hover{ background:#123a91; }
     <input type="text" name="full_name" placeholder="Email or Full Name" required>
     <input type="password" name="password" placeholder="Password" required>
 
-    <select name="concern_dropdown" id="concernSelect">
-        <option value="">Select Concern / Inquiry</option>
-        <option>Slow Internet</option>
-        <option>No Connection</option>
-        <option>Router LOS Light On</option>
-        <option>Intermittent Internet</option>
-        <option>Billing Concern</option>
-        <option>Account Verification</option>
-        <option value="others">Others…</option>
-    </select>
-
-    <textarea id="concernText" name="concern_text" placeholder="Type your concern here..."></textarea>
-
-    <button type="submit">Submit</button>
+    <button type="submit">Sign in to my account</button>
 </form>
 
 <!-- FORGOT PASSWORD FORM -->
@@ -366,11 +341,6 @@ button:hover{ background:#123a91; }
 </div>
 
 <script>
-// Concern toggle
-document.getElementById("concernSelect").addEventListener("change", function(){
-    concernText.style.display = (this.value === "others") ? "block" : "none";
-});
-
 // Show forgot form
 forgotLink.onclick = e => {
     e.preventDefault();
