@@ -344,6 +344,8 @@ button:hover{ background:#123a91; }
 .pwa-install-help{display:none;margin:12px 0 0;padding:11px 12px;border-radius:11px;background:#f1f6fc;color:#35516e;font-size:12px;line-height:1.55}
 .pwa-install-help.is-visible{display:block}
 @media(max-width:480px){.pwa-install-card{bottom:max(12px,env(safe-area-inset-bottom));padding:15px}.pwa-install-actions button{flex:1}}
+/* The install invitation is intended for phones/tablets, not desktop browsers. */
+@media(min-width:701px){.pwa-install-card{display:none!important}}
 @media(max-width:480px){.container{padding:26px 22px;border-radius:22px}}
 </style>
 </head>
