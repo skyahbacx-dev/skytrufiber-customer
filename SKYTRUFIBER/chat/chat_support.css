@@ -834,3 +834,76 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
 :root[data-theme="dark"] #msg-action-popup button:hover,:root[data-theme="dark"] #msg-action-popup button:focus-visible{background:#233a55}
 :root[data-theme="dark"] #msg-action-popup .action-cancel{border-color:#31445b;color:#aabbd0}
 @media(max-width:768px){.message.sent .action-toolbar{opacity:1;pointer-events:auto}.more-btn{width:32px;height:32px}}
+
+
+/* ============================================================
+   MESSENGER-STYLE MESSAGE ACTIONS
+   Keep the action button beside the sender's bubble and reveal
+   it only while that message is hovered/focused on desktop.
+============================================================ */
+.message.sent .message-content {
+    position: relative;
+}
+
+.message.sent .action-toolbar {
+    position: absolute;
+    top: calc(50% - 7px);
+    right: calc(100% + 7px);
+    left: auto;
+    transform: translateY(-50%);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: 20;
+    transition: opacity .16s ease, visibility .16s ease;
+}
+
+.message.sent .message-content:hover .action-toolbar,
+.message.sent .message-content:focus-within .action-toolbar {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+.message.sent .more-btn {
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid #dce5ef;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    color: #53677d;
+    box-shadow: 0 2px 8px rgba(10, 35, 65, .14);
+    line-height: 1;
+}
+
+.message.sent .more-btn:hover,
+.message.sent .more-btn:focus-visible {
+    background: #edf6ff;
+    color: #126fe5;
+    outline: 2px solid rgba(18,111,229,.2);
+    outline-offset: 1px;
+}
+
+/* Touch screens have no hover: keep the same compact control
+   beside the bubble so it remains discoverable and tappable. */
+@media (hover: none), (pointer: coarse) {
+    .message.sent .action-toolbar {
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .message.sent .action-toolbar {
+        right: calc(100% + 5px);
+        top: calc(50% - 6px);
+    }
+    .message.sent .more-btn {
+        width: 27px;
+        height: 27px;
+    }
+}
