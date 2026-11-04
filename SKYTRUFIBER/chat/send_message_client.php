@@ -1,103 +1,58 @@
 <?php
 ini_set("log_errors", 1);
 ini_set("error_log", __DIR__ . "/php_errors.log");
-
 if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-
-// IMPORTANT: Only send JSON *when expected*
 header("Content-Type: application/json");
-
 require_once __DIR__ . "/../../db_connect.php";
 
 $ticketId = intval($_POST["ticket"] ?? 0);
-$message  = trim($_POST["message"] ?? "");
+$message = trim($_POST["message"] ?? "");
+$clientId = (int)($_SESSION["client_id"] ?? 0);
 
-if ($ticketId <= 0) {
-    echo json_encode(["status" => "error", "msg" => "invalid_ticket"]);
-    exit;
-}
-
-/* ============================================================
-   FETCH TICKET
-============================================================ */
-$stmt = $conn->prepare("
-    SELECT client_id, status
-    FROM tickets
-    WHERE id = ?
-    LIMIT 1
-");
-$stmt->execute([$ticketId]);
-$ticket = $stmt->fetch(PDO::FETCH_ASSOC);
-
-if (!$ticket) {
-    echo json_encode(["status" => "error", "msg" => "ticket_not_found"]);
-    exit;
-}
-
-/* ============================================================
-   SECURITY: ENSURE CORRECT CLIENT SESSION
-============================================================ */
-if (!isset($_SESSION["client_id"]) || $_SESSION["client_id"] != $ticket["client_id"]) {
-
-    // JS expects RAW string, not JSON here!
-    echo "FORCE_LOGOUT";
-    exit;
-}
-
-/* ============================================================
-   TICKET RESOLVED → LOCK CHAT + FORCE LOGOUT
-============================================================ */
-if (strtolower($ticket["status"]) === "resolved") {
-
-    echo json_encode([
-        "status" => "blocked",
-        "msg"    => "ticket_resolved",
-        "force_logout" => true
-    ]);
-
-    exit;
-}
-
-/* ============================================================
-   EMPTY MESSAGE CHECK
-============================================================ */
+if ($ticketId <= 0) { echo json_encode(["status" => "error", "msg" => "invalid_ticket"]); exit; }
+if ($message === "") { echo json_encode(["status" => "empty"]); exit; }
 if (mb_strlen($message, "UTF-8") > 2000) { echo json_encode(["status" => "error", "msg" => "message_too_long"]); exit; }
 
-if ($message === "") {
-    echo json_encode(["status" => "empty"]);
+/* Ticket validation, first-message check, and insert in one database statement. */
+$stmt = $conn->prepare("
+    WITH ticket AS MATERIALIZED (
+        SELECT client_id, status FROM tickets WHERE id = ?
+    ),
+    first_message AS MATERIALIZED (
+        SELECT NOT EXISTS (
+            SELECT 1 FROM chat WHERE ticket_id = ? AND sender_type = 'client'
+        ) AS is_first
+    ),
+    inserted AS (
+        INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, seen, created_at)
+        SELECT ?, t.client_id, 'client', ?, TRUE, FALSE, NOW()
+        FROM ticket t
+        WHERE t.client_id = ? AND LOWER(t.status) <> 'resolved'
+        RETURNING id, created_at
+    )
+    SELECT t.client_id, t.status, f.is_first, i.id AS message_id, i.created_at
+    FROM ticket t CROSS JOIN first_message f
+    LEFT JOIN inserted i ON TRUE
+");
+$stmt->execute([$ticketId, $ticketId, $ticketId, $message, $clientId]);
+$result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if (!$result) { echo json_encode(["status" => "error", "msg" => "ticket_not_found"]); exit; }
+if ($clientId <= 0 || (int)$result["client_id"] !== $clientId) { echo "FORCE_LOGOUT"; exit; }
+if (strtolower((string)$result["status"]) === "resolved") {
+    echo json_encode(["status" => "blocked", "msg" => "ticket_resolved", "force_logout" => true]);
     exit;
 }
-
-/* ============================================================
-   CHECK IF THIS IS THE FIRST CLIENT MESSAGE
-============================================================ */
-$check = $conn->prepare("
-    SELECT COUNT(*) FROM chat
-    WHERE ticket_id = ? AND sender_type = 'client'
-");
-$check->execute([$ticketId]);
-$isFirst = ($check->fetchColumn() == 0);
-
-/* ============================================================
-   INSERT MESSAGE
-============================================================ */
-$insert = $conn->prepare("
-    INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, seen, created_at)
-    VALUES (?, ?, 'client', ?, TRUE, FALSE, NOW())
-");
-$insert->execute([$ticketId, $ticket["client_id"], $message]);
-
-/* ============================================================
-   RETURN RESPONSE
-============================================================ */
-if ($isFirst) {
-    echo json_encode([
-        "status" => "ok",
-        "first_message" => true
-    ]);
+if (empty($result["message_id"])) {
+    http_response_code(500);
+    echo json_encode(["status" => "error", "msg" => "message_not_saved"]);
     exit;
 }
-
-echo json_encode(["status" => "ok"]);
+echo json_encode([
+    "status" => "ok",
+    "first_message" => (bool)$result["is_first"],
+    "message_id" => (int)$result["message_id"],
+    "time" => date("g:i A", strtotime($result["created_at"]))
+]);
 exit;
 ?>
