@@ -104,6 +104,7 @@ try {
             </div>
 
             <div class="chat-header-right">
+                <a class="chat-dashboard-link" href="/fiber/dashboard"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
 
                 <!-- THEME BUTTON -->
                 <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
@@ -133,7 +134,7 @@ try {
                 <input id="message-input"
                        type="text"
                        aria-label="Write a message"
-                       placeholder="Type a message..."
+                       placeholder="Write your message..." maxlength="2000"
                        autocomplete="off">
             </div>
 
