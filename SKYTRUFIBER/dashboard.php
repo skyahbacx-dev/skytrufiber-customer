@@ -346,6 +346,33 @@ footer{padding-top:4px}
   .action:hover,.primary:hover,.logout:hover{transform:none}
 }
 
+
+/* Simplified dashboard actions and in-page Help Center navigation */
+.quick-access-wrap{position:relative;margin-top:13px}
+.quick-access-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid #ffffff45;border-radius:11px;padding:9px 12px;background:#ffffff18;color:#fff;font:700 12px inherit;cursor:pointer;transition:background .18s ease}
+.quick-access-btn:hover,.quick-access-btn[aria-expanded="true"]{background:#ffffff2b}
+.quick-access-btn span{font-size:17px;line-height:10px}
+.quick-access-menu{position:absolute;z-index:30;top:calc(100% + 7px);left:0;right:0;padding:6px;border:1px solid #ffffff30;border-radius:12px;background:#fff;box-shadow:0 14px 32px #00172c35}
+.quick-access-menu[hidden]{display:none}
+.quick-access-menu button{display:block;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#17324d;text-align:left;font:650 12px inherit;cursor:pointer}
+.quick-access-menu button:hover{background:#edf6ff;color:#126fc8}
+.help-view{animation:help-view-in .22s ease both}
+.help-view[hidden]{display:none}
+.breadcrumbs{display:flex;align-items:center;gap:10px;margin:2px 0 28px;color:#718198;font-size:13px}
+.breadcrumbs a{color:#1677e8;text-decoration:none;font-weight:750}
+.breadcrumbs a:hover{text-decoration:underline}
+.breadcrumbs span[aria-hidden="true"]{color:#9aabba;font-size:20px}
+.breadcrumbs [aria-current="page"]{color:#17324d;font-weight:750}
+.help-heading{margin-bottom:22px}
+.help-heading h1{color:#071b35;margin:7px 0 8px}
+.help-view .panel{margin-top:0}
+.help-contact{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px;padding:20px 22px;border:1px solid #d7eaf6;border-radius:18px;background:linear-gradient(110deg,#eaf5ff,#f0fcf7)}
+.help-contact strong{display:block;color:#082d58;margin-bottom:4px}
+.help-contact p{margin:0;color:#506b82;font-size:13px}
+@keyframes help-view-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:520px){.quick-access-wrap{margin-top:11px}.help-contact{align-items:stretch;flex-direction:column}.help-contact .primary{text-align:center}}
+@media(prefers-reduced-motion:reduce){.help-view{animation:none}}
+
 </style>
 </head>
 <body>
@@ -354,9 +381,10 @@ footer{padding-top:4px}
   <a class="logout" href="/fiber/logout">Log out</a>
 </div></header>
 <main>
+  <div id="dashboard-home">
   <section class="welcome">
     <div><div class="eyebrow">Your account at a glance</div><h1>Good day, <?= $name ?>!</h1><p class="sub">Choose what you need below. We’ve kept everything in one simple place.</p></div>
-    <div class="welcome-side"><div class="clock-card"><span class="clock-label">PHILIPPINE STANDARD TIME</span><strong id="live-clock">--:--:--</strong><span id="live-date">Loading date…</span></div><div class="account-chip"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong><?php if ($email): ?><span style="margin-top:8px">Email</span><strong><?= $email ?></strong><?php endif; ?></div></div>
+    <div class="welcome-side"><div class="clock-card"><span class="clock-label">PHILIPPINE STANDARD TIME</span><strong id="live-clock">--:--:--</strong><span id="live-date">Loading date…</span><div class="quick-access-wrap"><button type="button" class="quick-access-btn" id="quick-access-toggle" aria-expanded="false">Quick Access <span>⌄</span></button><div class="quick-access-menu" id="quick-access-menu" hidden><button type="button" data-open-modal="account-modal">My Account</button><button type="button" data-open-modal="concerns-modal">My Latest Concerns</button><button type="button" data-open-help>Help Center</button></div></div></div></div>
   </section>
 
   <h2 class="section-title">What would you like to do?</h2>
@@ -364,13 +392,10 @@ footer{padding-top:4px}
     <a class="action" href="#account-modal" data-open-modal="account-modal" aria-haspopup="dialog"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span><h3>My Account</h3><p>View your customer ID and registered account information.</p></span><span class="arrow">›</span></a>
     <a class="action" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>"><span class="icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8z"/></svg></span><span><h3>Get Support</h3><p>Open your support conversation and chat with our team.</p></span><span class="arrow">›</span></a>
     <a class="action" href="#concerns-modal" data-open-modal="concerns-modal" aria-haspopup="dialog"><span class="icon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><h3>My Concerns</h3><p>See the latest status of your support request.</p></span><span class="arrow">›</span></a>
-    <a class="action" href="#help"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.1 1-1.8 1.3-1.8 3M12 17h.01"/></svg></span><span><h3>Help Center</h3><p>Read quick answers and simple troubleshooting steps.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="#help-center" data-open-help><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.1 1-1.8 1.3-1.8 3M12 17h.01"/></svg></span><span><h3>Help Center</h3><p>Read quick answers and simple troubleshooting steps.</p></span><span class="arrow">›</span></a>
   </section>
 
-  <section class="lower dashboard-secondary">
-    <div class="panel"><h2>Need help?</h2><p class="sub">Your account details and latest support request are available in the pop-up cards above.</p><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Continue to support</a></div>
-    <div class="panel"><h2>Quick access</h2><p class="sub">Open your account information or check the latest concern without leaving the dashboard.</p><div class="modal-quick-links"><button type="button" data-open-modal="account-modal">My Account</button><button type="button" data-open-modal="concerns-modal">My Latest Concerns</button></div></div>
-  </section>
+
 
   <div class="portal-modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" aria-hidden="true">
     <div class="portal-modal-card"><button class="modal-close" type="button" aria-label="Close">×</button>
@@ -394,13 +419,18 @@ footer{padding-top:4px}
     </div>
   </div>
 
-  <section class="panel guides" id="help" style="margin-top:20px"><h2>Help Center · Quick answers</h2>
-    <details><summary>My internet is slow. What should I do?</summary><p>Restart your router by unplugging its power for about 30 seconds, then plug it back in and allow it to reconnect. If the issue continues, choose Get Support and tell our team when the slowdown happens.</p></details>
-    <details><summary>I have no internet connection.</summary><p>Check that your router is powered on and that its cables are firmly connected. If the LOS light is red or blinking, avoid resetting the router and contact support so our team can assist.</p></details>
-    <details><summary>How do I follow up on my concern?</summary><p>Choose My Concerns to view the latest ticket status, then select Open conversation to continue your existing support chat.</p></details>
-    <details><summary>How do I contact customer service?</summary><p>Select Get Support. Your existing support conversation will open so you can continue without losing your previous messages.</p></details>
+  </div>
+  <section class="help-view" id="help-center" hidden aria-labelledby="help-center-title">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="#dashboard" data-show-dashboard>Dashboard</a><span aria-hidden="true">›</span><span aria-current="page">Help Center</span></nav>
+    <div class="help-heading"><div class="eyebrow">CUSTOMER SUPPORT</div><h1 id="help-center-title">Help Center</h1><p class="sub">Find quick answers and simple steps to resolve common connection concerns.</p></div>
+    <section class="panel guides">
+      <details><summary>My internet is slow. What should I do?</summary><p>Restart your router by unplugging its power for about 30 seconds, then plug it back in and allow it to reconnect. If the issue continues, choose Get Support and tell our team when the slowdown happens.</p></details>
+      <details><summary>I have no internet connection.</summary><p>Check that your router is powered on and that its cables are firmly connected. If the LOS light is red or blinking, avoid resetting the router and contact support so our team can assist.</p></details>
+      <details><summary>How do I follow up on my concern?</summary><p>Choose My Concerns on your dashboard to view the latest ticket status, then select Open conversation to continue your existing support chat.</p></details>
+      <details><summary>How do I contact customer service?</summary><p>Select Get Support on your dashboard. Your existing support conversation will open so you can continue without losing your previous messages.</p></details>
+    </section>
+    <div class="help-contact"><div><strong>Still have a question?</strong><p>Our team can help with your account or connection concern.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></div>
   </section>
-  <section class="support-note"><div><strong>Still need a hand?</strong><p>Our customer service team can help you with account and connection concerns.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></section>
 </main>
 <footer>SkyTruFiber by AHBA Development · Customer Portal</footer>
 
@@ -430,6 +460,20 @@ footer{padding-top:4px}
  document.addEventListener('keydown',e=>{
   if(e.key==='Escape'){const dialog=dialogs.find(d=>d.classList.contains('is-open'));if(dialog)close(dialog);}
  });
+ const home=document.getElementById('dashboard-home');
+ const help=document.getElementById('help-center');
+ function showHelp(){if(home)home.hidden=true;if(help)help.hidden=false;window.location.hash='help-center';window.scrollTo({top:0,behavior:'smooth'});}
+ function showDashboard(){if(help)help.hidden=true;if(home)home.hidden=false;window.location.hash='dashboard';window.scrollTo({top:0,behavior:'smooth'});}
+ document.addEventListener('click',e=>{
+  const helpTrigger=e.target.closest('[data-open-help]');
+  if(helpTrigger){e.preventDefault();showHelp();return;}
+  if(e.target.closest('[data-show-dashboard]')){e.preventDefault();showDashboard();return;}
+  const quickToggle=e.target.closest('#quick-access-toggle');
+  const quickMenu=document.getElementById('quick-access-menu');
+  if(quickToggle&&quickMenu){const expanded=quickToggle.getAttribute('aria-expanded')==='true';quickToggle.setAttribute('aria-expanded',String(!expanded));quickMenu.hidden=expanded;return;}
+  if(quickMenu&&!e.target.closest('.quick-access-wrap')){quickMenu.hidden=true;const b=document.getElementById('quick-access-toggle');if(b)b.setAttribute('aria-expanded','false');}
+ });
+ if(window.location.hash==='#help-center')showHelp();
 })();
 </script>
 
