@@ -7,6 +7,8 @@ let editing = false;
 let activePopup = null;
 const ticketId = new URLSearchParams(window.location.search).get("ticket");
 let suggestionShown = false;
+let chatPollingTimer = null;
+let isLoggingOut = false;
 
 /* ============================================================
 INIT
@@ -28,7 +30,7 @@ $(document).ready(() => {
     checkTicketStatus();
 
     // Polling every 3.5 seconds
-    setInterval(() => {
+    chatPollingTimer = setInterval(() => {
         if (!editing && !activePopup) {
             fetchNewMessages();
             checkTicketStatus();
@@ -166,7 +168,7 @@ function applyTicketStatus(status) {
         `);
 
         setTimeout(() => {
-            window.location.href = "/SKYTRUFIBER/chat/logout.php";
+            window.location.href = "/fiber/logout";
         }, 5000);
 
         return;
@@ -214,7 +216,7 @@ function sendMessage() {
         let res = {};
         try { res = JSON.parse(raw); } catch (_) {}
         if (raw.trim() === "FORCE_LOGOUT") {
-            window.location.href = "/SKYTRUFIBER/chat/logout.php";
+            window.location.href = "/fiber/logout";
             return;
         }
         if (res.status !== "ok") {
@@ -294,7 +296,7 @@ function loadMessages(scrollBottom = false) {
         const response = (html || "").trim();
 
         if (response === "FORCE_LOGOUT") {
-            window.location.href = "/SKYTRUFIBER/chat/logout.php";
+            window.location.href = "/fiber/logout";
             return;
         }
         if (response === "CHAT_SESSION_MISSING") {
@@ -332,7 +334,7 @@ function fetchNewMessages() {
     .done(html => {
 
         if (html.trim() === "FORCE_LOGOUT") {
-            window.location.href = "/SKYTRUFIBER/chat/logout.php";
+            window.location.href = "/fiber/logout";
             return;
         }
 
@@ -548,8 +550,11 @@ $(document).on("click", ".action-delete", function () {
 /* ============================================================
 LOGOUT BUTTON
 ============================================================ */
-$(document).on("click", "#logout-btn", () => {
-    if (confirm("Are you sure you want to log out?")) {
-        window.location.href = "/SKYTRUFIBER/chat/logout.php";
-    }
+$(document).on("click", "#logout-btn", function () {
+    if (isLoggingOut) return;
+    if (!confirm("Are you sure you want to log out?")) return;
+    isLoggingOut = true;
+    if (chatPollingTimer) clearInterval(chatPollingTimer);
+    $("#logout-btn").prop("disabled", true).attr("aria-busy", "true").text("Logging out…");
+    window.location.assign("/fiber/logout");
 });
