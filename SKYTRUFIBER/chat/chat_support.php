@@ -109,15 +109,15 @@ try {
                     <span>Dashboard</span>
                 </a>
 
+                <button id="logout-btn" class="logout-btn" type="button">
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    <span>Logout</span>
+                </button>
+
                 <button id="theme-toggle" class="theme-toggle" type="button"
                         aria-label="Toggle dark mode" title="Toggle light and dark mode">
                     <i class="fa-solid fa-moon theme-icon moon-icon" aria-hidden="true"></i>
                     <i class="fa-solid fa-sun theme-icon sun-icon" aria-hidden="true"></i>
-                </button>
-
-                <button id="logout-btn" class="logout-btn" type="button">
-                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
-                    <span>Logout</span>
                 </button>
             </nav>
         </div>
