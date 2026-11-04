@@ -2,7 +2,7 @@
 ini_set("log_errors", 1);
 ini_set("error_log", __DIR__ . "/php_errors.log");
 
-if (!isset($_SESSION)) session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once "../../db_connect.php";
 
 header("Content-Type: application/json; charset=utf-8");
@@ -35,7 +35,7 @@ if (!$ticketRow || empty($_SESSION["client_id"]) || (int)$ticketRow["client_id"]
     exit;
 }
 
-if ($ticketRow["status"] === "resolved") {
+if (strtolower((string)$ticketRow["status"]) === "resolved") {
     echo json_encode(["status" => "blocked", "msg" => "Cannot delete messages from a resolved ticket"]);
     exit;
 }
@@ -81,7 +81,7 @@ if (trim($msg["message"]) === "") {
 // ----------------------------------------------------------
 $upd = $conn->prepare("
     UPDATE chat
-    SET message = '', deleted = TRUE, edited = FALSE, updated_at = NOW()
+    SET message = '', deleted = TRUE, deleted_at = NOW(), edited = FALSE, updated_at = NOW()
     WHERE id = ? AND ticket_id = ? AND sender_type = 'client'
 ");
 $upd->execute([$msgID, $ticket]);
