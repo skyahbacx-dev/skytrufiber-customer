@@ -729,3 +729,17 @@ body {
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Customer chat usability refinements */
+.chat-header-right { flex-direction: row; align-items: center; gap: 10px; }
+.chat-dashboard-link { display:inline-flex; align-items:center; gap:7px; color:#fff; text-decoration:none; border:1px solid rgba(255,255,255,.48); background:rgba(3,44,112,.18); border-radius:9px; padding:9px 12px; font-size:12px; font-weight:700; }
+.chat-dashboard-link:hover { background:rgba(3,44,112,.38); }
+#message-input { min-width:0; }
+#send-btn:focus-visible, #theme-toggle:focus-visible, #logout-btn:focus-visible, .chat-dashboard-link:focus-visible, .more-btn:focus-visible { outline:3px solid #8bd5ff; outline-offset:3px; }
+.message-bubble { white-space:pre-wrap; overflow-wrap:anywhere; }
+.edit-textarea { width:100%; min-height:82px; resize:vertical; box-sizing:border-box; font:inherit; border:1px solid var(--input-border); border-radius:9px; padding:9px; }
+.edit-actions { display:flex; gap:8px; margin-top:8px; }
+.edit-actions button { border:0; border-radius:8px; padding:7px 11px; cursor:pointer; font-weight:700; }
+.edit-save { background:#087cf0; color:white; }
+.edit-cancel { background:var(--bg-secondary); color:var(--text); }
+@media(max-width:768px) { .chat-header-right { flex-wrap:wrap; justify-content:flex-end; gap:6px; } .chat-dashboard-link { padding:7px 9px; font-size:11px; } }
