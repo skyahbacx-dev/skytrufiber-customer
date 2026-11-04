@@ -1089,3 +1089,15 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
     }
     #logout-btn i { font-size: 13px; }
 }
+
+
+/* Header control alignment: keep the theme switch at the far-right edge. */
+.chat-header { justify-content: space-between; }
+.chat-header-left { flex: 1 1 auto; min-width: 0; }
+.chat-header-right { margin-left: auto; flex: 0 0 auto; justify-content: flex-end; }
+.chat-dashboard-link { order: 1; }
+#logout-btn { order: 2; }
+#theme-toggle { order: 3; }
+@media (max-width: 768px) {
+  .chat-header-right { margin-left: auto; flex-wrap: nowrap !important; }
+}
