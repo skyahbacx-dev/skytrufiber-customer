@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
         try {
             /* Fetch user */
             $stmt = $conn->prepare("
-                SELECT *
+                SELECT id, full_name, password
                 FROM users
                 WHERE email = :input OR full_name = :input
                 LIMIT 1
@@ -39,41 +39,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                     $lock = $conn->prepare("SELECT pg_advisory_xact_lock(hashtextextended(:client_key, 0))");
                     $lock->execute([':client_key' => (string)$user['id']]);
 
+                    // Resolve the active ticket, or create a ticket and its greeting,
+                    // in one database round-trip while the advisory lock is held.
+                    $csrGreeting = "Hello {$user['full_name']}! This is SkyTruFiber Support. How may I assist you today?";
                     $ticketStmt = $conn->prepare("
-                        SELECT id, status
-                        FROM tickets
-                        WHERE client_id = :cid
-                          AND LOWER(status) <> 'resolved'
-                        ORDER BY created_at DESC, id DESC
-                        LIMIT 1
-                        FOR UPDATE
-                    ");
-                    $ticketStmt->execute([':cid' => $user['id']]);
-                    $activeTicket = $ticketStmt->fetch(PDO::FETCH_ASSOC);
-
-                    if ($activeTicket) {
-                        $ticketId = (int)$activeTicket['id'];
-                        unset($_SESSION['show_suggestions']);
-                    } else {
-                        $newTicket = $conn->prepare("
+                        WITH active_ticket AS MATERIALIZED (
+                            SELECT id
+                            FROM tickets
+                            WHERE client_id = :cid
+                              AND LOWER(status) <> 'resolved'
+                            ORDER BY created_at DESC, id DESC
+                            LIMIT 1
+                            FOR UPDATE
+                        ),
+                        new_ticket AS (
                             INSERT INTO tickets (client_id, status, created_at)
-                            VALUES (:cid, 'pending', NOW())
+                            SELECT :cid, 'pending', NOW()
+                            WHERE NOT EXISTS (SELECT 1 FROM active_ticket)
                             RETURNING id
-                        ");
-                        $newTicket->execute([':cid' => $user['id']]);
-                        $ticketId = (int)$newTicket->fetchColumn();
-
-                        $csrGreeting = "Hello {$user['full_name']}! This is SkyTruFiber Support. How may I assist you today?";
-                        $greet = $conn->prepare("
+                        ),
+                        greeting AS (
                             INSERT INTO chat (ticket_id, client_id, sender_type, message, delivered, seen, created_at)
-                            VALUES (:tid, NULL, 'csr', :msg, TRUE, TRUE, NOW())
-                        ");
-                        $greet->execute([
-                            ':tid' => $ticketId,
-                            ':msg' => $csrGreeting
-                        ]);
+                            SELECT id, NULL, 'csr', :greeting, TRUE, TRUE, NOW()
+                            FROM new_ticket
+                            RETURNING ticket_id
+                        ),
+                        selected_ticket AS (
+                            SELECT id, FALSE AS created FROM active_ticket
+                            UNION ALL
+                            SELECT id, TRUE AS created FROM new_ticket
+                        )
+                        SELECT id, created
+                        FROM selected_ticket
+                        LIMIT 1
+                    ");
+                    $ticketStmt->execute([
+                        ':cid' => $user['id'],
+                        ':greeting' => $csrGreeting
+                    ]);
+                    $ticketResult = $ticketStmt->fetch(PDO::FETCH_ASSOC);
 
+                    if (!$ticketResult) {
+                        throw new RuntimeException('Unable to find or create the customer support ticket.');
+                    }
+
+                    $ticketId = (int)$ticketResult['id'];
+                    if (!empty($ticketResult['created'])) {
                         $_SESSION['show_suggestions'] = true;
+                    } else {
+                        unset($_SESSION['show_suggestions']);
                     }
 
                     $conn->commit();
