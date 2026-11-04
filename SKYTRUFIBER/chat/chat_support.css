@@ -1156,3 +1156,13 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
         background-size: auto, min(52%, 230px);
     }
 }
+
+
+/* Restore the soft watermark treatment on the fixed chat background layer. */
+.chat-modal::before {
+    filter: blur(2px);
+    transform: scale(1.015);
+}
+:root[data-theme="dark"] .chat-modal::before {
+    filter: blur(2.5px);
+}
