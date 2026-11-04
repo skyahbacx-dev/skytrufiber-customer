@@ -133,6 +133,28 @@ h1{letter-spacing:-1.4px;font-weight:850}
 @media(max-width:760px){.welcome-side{margin-top:18px;display:grid;grid-template-columns:1fr 1fr}.clock-card{min-width:0}.account-chip{min-width:0}.clock-card strong{font-size:23px}}
 @media(max-width:430px){.welcome-side{grid-template-columns:1fr}.clock-card{min-height:100px}.account-chip{min-height:85px}}
 @media(prefers-reduced-motion:reduce){.action,.primary{transition:none}}
+
+/* Account and latest-concern dialogs */
+.welcome-side .account-chip{display:none}
+.dashboard-secondary{margin-top:20px}
+.action{cursor:pointer}
+.portal-modal{position:fixed;inset:0;z-index:1000;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(3,15,31,.62);backdrop-filter:blur(9px);opacity:0}
+.portal-modal.is-open{display:flex;opacity:1}
+.portal-modal-card{position:relative;width:min(480px,100%);padding:30px;border:1px solid #ffffffaa;border-radius:24px;background:#fff;box-shadow:0 30px 90px #00152e55;transform:translateY(14px) scale(.98);transition:transform .22s ease}
+.portal-modal.is-open .portal-modal-card{transform:translateY(0) scale(1)}
+.modal-close{position:absolute;right:16px;top:14px;width:36px;height:36px;border:0;border-radius:50%;background:#eef4fa;color:#34516c;font-size:24px;line-height:1;cursor:pointer}
+.modal-kicker{font-size:10px;font-weight:850;letter-spacing:.16em;color:#1680cf}
+.portal-modal-card h2{margin:7px 40px 5px 0;color:#092c52;font-size:25px;letter-spacing:-.7px}
+.modal-description{margin:0 0 18px;color:#718198;font-size:13px;line-height:1.55}
+.portal-modal-card .ticket-row{padding:15px 0}
+.modal-footnote{margin-top:16px;padding:13px 14px;border-radius:12px;background:#edf7ff;color:#456987;font-size:12px;line-height:1.55}
+.modal-primary{display:block;text-align:center;margin-top:18px}
+.modal-empty{padding:14px 0}
+.modal-quick-links{display:flex;gap:9px;flex-wrap:wrap;margin-top:12px}
+.modal-quick-links button{border:1px solid #d5e5f3;border-radius:11px;background:#f2f8fd;color:#1268b7;padding:10px 13px;font-weight:750;cursor:pointer}
+body.modal-open{overflow:hidden}
+@media(max-width:520px){.portal-modal{padding:12px;align-items:flex-end}.portal-modal-card{padding:25px 21px calc(24px + env(safe-area-inset-bottom));border-radius:24px 24px 18px 18px}.modal-quick-links{display:grid;grid-template-columns:1fr 1fr}.modal-quick-links button{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.portal-modal-card{transition:none}}
 </style>
 </head>
 <body>
@@ -148,27 +170,38 @@ h1{letter-spacing:-1.4px;font-weight:850}
 
   <h2 class="section-title">What would you like to do?</h2>
   <section class="actions" aria-label="Main actions">
-    <a class="action" href="#account"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span><h3>My Account</h3><p>View your customer ID and registered account information.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="#account-modal" data-open-modal="account-modal" aria-haspopup="dialog"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span><h3>My Account</h3><p>View your customer ID and registered account information.</p></span><span class="arrow">›</span></a>
     <a class="action" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>"><span class="icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8z"/></svg></span><span><h3>Get Support</h3><p>Open your support conversation and chat with our team.</p></span><span class="arrow">›</span></a>
-    <a class="action" href="#concerns"><span class="icon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><h3>My Concerns</h3><p>See the latest status of your support request.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="#concerns-modal" data-open-modal="concerns-modal" aria-haspopup="dialog"><span class="icon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><h3>My Concerns</h3><p>See the latest status of your support request.</p></span><span class="arrow">›</span></a>
     <a class="action" href="#help"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.1 1-1.8 1.3-1.8 3M12 17h.01"/></svg></span><span><h3>Help Center</h3><p>Read quick answers and simple troubleshooting steps.</p></span><span class="arrow">›</span></a>
   </section>
 
-  <section class="lower">
-    <div class="panel" id="account"><h2>My Account</h2>
+  <section class="lower dashboard-secondary">
+    <div class="panel"><h2>Need help?</h2><p class="sub">Your account details and latest support request are available in the pop-up cards above.</p><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Continue to support</a></div>
+    <div class="panel"><h2>Quick access</h2><p class="sub">Open your account information or check the latest concern without leaving the dashboard.</p><div class="modal-quick-links"><button type="button" data-open-modal="account-modal">My Account</button><button type="button" data-open-modal="concerns-modal">My Latest Concerns</button></div></div>
+  </section>
+
+  <div class="portal-modal" id="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-modal-title" aria-hidden="true">
+    <div class="portal-modal-card"><button class="modal-close" type="button" aria-label="Close">×</button>
+      <div class="modal-kicker">YOUR PROFILE</div><h2 id="account-modal-title">My Account</h2><p class="modal-description">Your registered SkyTruFiber account information.</p>
       <div class="ticket-row"><span>Account name</span><strong><?= $name ?></strong></div>
       <div class="ticket-row"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong></div>
       <div class="ticket-row"><span>Email address</span><strong><?= $email ?: 'Not provided' ?></strong></div>
+      <div class="modal-footnote">For changes to your registered details, please contact our support team.</div>
     </div>
-    <div class="panel" id="concerns"><h2>My Latest Concern</h2>
+  </div>
+
+  <div class="portal-modal" id="concerns-modal" role="dialog" aria-modal="true" aria-labelledby="concerns-modal-title" aria-hidden="true">
+    <div class="portal-modal-card"><button class="modal-close" type="button" aria-label="Close">×</button>
+      <div class="modal-kicker">SUPPORT OVERVIEW</div><h2 id="concerns-modal-title">My Latest Concerns</h2><p class="modal-description">Check your most recent support request and continue the conversation.</p>
       <?php if ($latestTicket): ?>
       <div class="ticket-row"><span>Request number</span><strong>#<?= $ticketId ?></strong></div>
       <div class="ticket-row"><span>Current status</span><strong><span class="pill <?= $statusClass ?>"><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></span></strong></div>
-      <div class="ticket-row"><span>Started</span><strong><?= htmlspecialchars(date('M j, Y', strtotime($latestTicket['created_at'])), ENT_QUOTES, 'UTF-8') ?></strong></div>
-      <a class="primary" style="display:block;text-align:center;margin-top:12px" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Open conversation</a>
-      <?php else: ?><p class="sub">You don’t have a support request yet. Start a conversation whenever you need help.</p><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Get support</a><?php endif; ?>
+      <div class="ticket-row"><span>Started</span><strong><?= htmlspecialchars(date('M j, Y · g:i A', strtotime($latestTicket['created_at'])), ENT_QUOTES, 'UTF-8') ?></strong></div>
+      <a class="primary modal-primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Open conversation</a>
+      <?php else: ?><p class="sub modal-empty">You don’t have a support request yet. Start a conversation whenever you need help.</p><a class="primary modal-primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Get support</a><?php endif; ?>
     </div>
-  </section>
+  </div>
 
   <section class="panel guides" id="help" style="margin-top:20px"><h2>Help Center · Quick answers</h2>
     <details><summary>My internet is slow. What should I do?</summary><p>Restart your router by unplugging its power for about 30 seconds, then plug it back in and allow it to reconnect. If the issue continues, choose Get Support and tell our team when the slowdown happens.</p></details>
@@ -179,6 +212,35 @@ h1{letter-spacing:-1.4px;font-weight:850}
   <section class="support-note"><div><strong>Still need a hand?</strong><p>Our customer service team can help you with account and connection concerns.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></section>
 </main>
 <footer>SkyTruFiber by AHBA Development · Customer Portal</footer>
+
+
+<script>
+(function(){
+ const dialogs=[...document.querySelectorAll('.portal-modal')];
+ let lastTrigger=null;
+ function close(dialog){
+  dialog.classList.remove('is-open');dialog.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+  if(lastTrigger&&lastTrigger.focus)lastTrigger.focus();
+ }
+ function open(dialog,trigger){
+  if(!dialog)return;lastTrigger=trigger||document.activeElement;
+  dialog.style.display='flex';dialog.setAttribute('aria-hidden','false');document.body.classList.add('modal-open');
+  requestAnimationFrame(()=>{dialog.classList.add('is-open');const closeBtn=dialog.querySelector('.modal-close');if(closeBtn)closeBtn.focus();});
+ }
+ document.addEventListener('click',e=>{
+  const trigger=e.target.closest('[data-open-modal]');
+  if(trigger){e.preventDefault();open(document.getElementById(trigger.dataset.openModal),trigger);return;}
+  const closeBtn=e.target.closest('.modal-close');
+  if(closeBtn){const dialog=closeBtn.closest('.portal-modal');if(dialog)close(dialog);return;}
+  const backdrop=e.target.classList.contains('portal-modal')?e.target:null;
+  if(backdrop)close(backdrop);
+ });
+ document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){const dialog=dialogs.find(d=>d.classList.contains('is-open'));if(dialog)close(dialog);}
+ });
+})();
+</script>
 
 <script>
 (function(){
