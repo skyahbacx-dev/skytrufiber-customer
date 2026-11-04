@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                             UNION ALL
                             SELECT id, TRUE AS created FROM new_ticket
                         )
-                        SELECT id, created
+                        SELECT id, CASE WHEN created THEN 1 ELSE 0 END AS was_created
                         FROM selected_ticket
                         LIMIT 1
                     ");
@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                     }
 
                     $ticketId = (int)$ticketResult['id'];
-                    if (!empty($ticketResult['created'])) {
+                    if ((int)$ticketResult['was_created'] === 1) {
                         $_SESSION['show_suggestions'] = true;
                     } else {
                         unset($_SESSION['show_suggestions']);
