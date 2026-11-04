@@ -155,6 +155,197 @@ h1{letter-spacing:-1.4px;font-weight:850}
 body.modal-open{overflow:hidden}
 @media(max-width:520px){.portal-modal{padding:12px;align-items:flex-end}.portal-modal-card{padding:25px 21px calc(24px + env(safe-area-inset-bottom));border-radius:24px 24px 18px 18px}.modal-quick-links{display:grid;grid-template-columns:1fr 1fr}.modal-quick-links button{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.portal-modal-card{transition:none}}
+
+/* SkyTruFiber customer portal — visual refresh (presentation only) */
+:root{
+  --navy:#071b35;
+  --blue:#1677e8;
+  --mint:#48d6a0;
+  --line:#e4ebf4;
+  --muted:#718198;
+}
+body{
+  background:
+    radial-gradient(ellipse at 8% 0%,rgba(22,119,232,.13),transparent 32%),
+    radial-gradient(ellipse at 92% 18%,rgba(72,214,160,.12),transparent 28%),
+    #f4f7fc;
+}
+.topbar{
+  background:linear-gradient(112deg,#06172f 0%,#082d58 55%,#0876a7 100%);
+  box-shadow:0 8px 28px rgba(5,28,55,.16);
+}
+.brand{letter-spacing:-.2px}
+.brand img{box-shadow:0 4px 14px #001a3433}
+.logout{
+  padding:10px 17px;
+  border-radius:12px;
+  background:#ffffff0d;
+  transition:background .2s ease,transform .2s ease;
+}
+.logout:hover{background:#ffffff22;transform:translateY(-1px)}
+main{margin-top:34px}
+.welcome{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  align-items:center;
+  min-height:220px;
+  margin-bottom:32px;
+  padding:32px 34px;
+  border:1px solid #ffffff18;
+  border-radius:26px;
+  color:#fff;
+  background:
+    radial-gradient(ellipse at 82% 22%,rgba(72,214,160,.24),transparent 28%),
+    radial-gradient(ellipse at 96% 100%,rgba(22,119,232,.34),transparent 38%),
+    linear-gradient(115deg,#071b35 0%,#0b3765 58%,#075b83 100%);
+  box-shadow:0 20px 48px rgba(9,43,79,.17);
+}
+.welcome:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  width:330px;height:330px;
+  right:7%;top:50%;
+  transform:translateY(-50%);
+  border:1px solid #ffffff20;
+  border-radius:50%;
+  box-shadow:0 0 0 24px #ffffff08,0 0 0 50px #ffffff06,0 0 0 78px #ffffff04;
+  pointer-events:none;
+}
+.welcome>div:first-child{align-self:center;max-width:590px}
+.eyebrow{color:#78e8c2;font-size:11px;letter-spacing:.16em}
+h1{
+  color:#fff;
+  font-size:clamp(30px,4vw,43px);
+  letter-spacing:-1.5px;
+  line-height:1.08;
+  margin:10px 0 11px;
+}
+.welcome .sub{color:#d1e4f5;max-width:480px;font-size:14px}
+.welcome-side{position:relative;z-index:1}
+.clock-card{
+  min-width:205px;
+  min-height:118px;
+  padding:19px 21px;
+  border:1px solid #ffffff24;
+  border-radius:19px;
+  background:linear-gradient(145deg,#ffffff1c,#ffffff0b);
+  box-shadow:0 12px 32px #00172c24;
+  backdrop-filter:blur(12px);
+}
+.clock-label{color:#9fe9d1;font-size:9px;letter-spacing:.15em}
+.clock-card strong{font-size:29px;color:#fff}
+.clock-card span:last-child{color:#d4e7f6}
+.section-title{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  margin-bottom:16px;
+  font-size:20px;
+  letter-spacing:-.6px;
+}
+.section-title:before{
+  content:"";
+  width:5px;height:22px;
+  border-radius:8px;
+  background:linear-gradient(#1677e8,#48d6a0);
+}
+.actions{gap:17px}
+.action{
+  min-height:158px;
+  padding:24px;
+  border:1px solid #e3ebf4;
+  border-radius:21px;
+  background:linear-gradient(145deg,#fff,#fbfdff);
+  box-shadow:0 9px 25px rgba(16,48,82,.055);
+  transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s,border-color .25s;
+}
+.action:before{opacity:.0}
+.action:hover{
+  transform:translateY(-6px);
+  border-color:#b7d8f4;
+  box-shadow:0 20px 42px rgba(16,48,82,.12);
+}
+.action:before{opacity:0}
+.action:hover:before{opacity:1}
+.icon{
+  width:54px;height:54px;flex-basis:54px;
+  border-radius:17px;
+  background:linear-gradient(145deg,#e8f3ff,#e8fbf4);
+  color:#126fc8;
+  box-shadow:inset 0 1px #fff,0 6px 14px #0c477b0b;
+}
+.action:nth-child(2) .icon{background:linear-gradient(145deg,#e6f4ff,#e7f8ff);color:#0879bd}
+.action:nth-child(3) .icon{background:linear-gradient(145deg,#eaf9f2,#e4fbef);color:#16885d}
+.action:nth-child(4) .icon{background:linear-gradient(145deg,#f0edff,#e9f1ff);color:#6653bd}
+.action h3{font-size:18px;letter-spacing:-.45px}
+.action p{font-size:13px;line-height:1.65}
+.arrow{font-size:26px;transition:transform .2s,color .2s}
+.action:hover .arrow{transform:translateX(4px);color:#1677e8}
+.lower{gap:17px;margin-top:22px}
+.panel{
+  padding:25px;
+  border:1px solid #e4ebf4;
+  border-radius:21px;
+  background:linear-gradient(145deg,#fff,#fbfdff);
+  box-shadow:0 9px 25px rgba(16,48,82,.045);
+}
+.panel h2{font-size:18px;letter-spacing:-.45px}
+.support-note{
+  position:relative;
+  overflow:hidden;
+  padding:23px 25px;
+  border:1px solid #d7eaf6;
+  border-radius:21px;
+  background:
+    radial-gradient(ellipse at 90% 0%,#d9f9ec 0%,transparent 38%),
+    linear-gradient(110deg,#eaf5ff,#f0fcf7);
+}
+.support-note:after{
+  content:"";
+  position:absolute;
+  right:180px;top:-70px;
+  width:180px;height:180px;
+  border:1px solid #1686c21a;border-radius:50%;
+  box-shadow:0 0 0 18px #1686c20a,0 0 0 38px #1686c207;
+  pointer-events:none;
+}
+.primary{
+  position:relative;
+  z-index:1;
+  padding:12px 18px;
+  border-radius:12px;
+  background:linear-gradient(135deg,#1677e8,#0756c9);
+  box-shadow:0 8px 18px #1677e82c;
+  transition:transform .2s ease,box-shadow .2s ease;
+}
+.primary:hover{transform:translateY(-2px);box-shadow:0 12px 24px #1677e83b}
+.guides details{padding:14px 0}
+.guides summary{font-size:14px}
+.guides summary:hover{color:#1677e8}
+footer{padding-top:4px}
+@media(max-width:760px){
+  main{margin-top:25px}
+  .welcome{padding:25px 23px;min-height:0;border-radius:22px}
+  .welcome:after{right:-100px;opacity:.7}
+  .welcome-side{grid-template-columns:1fr;margin-top:20px}
+  .clock-card{min-height:105px}
+  .actions{gap:12px}
+  .action{min-height:0;padding:19px;border-radius:18px}
+  .panel{padding:21px}
+}
+@media(max-width:430px){
+  .welcome{padding:23px 19px}
+  h1{font-size:31px}
+  .action{gap:13px}
+  .icon{width:47px;height:47px;flex-basis:47px}
+}
+@media(prefers-reduced-motion:reduce){
+  .action,.logout,.primary,.arrow{transition:none}
+  .action:hover,.primary:hover,.logout:hover{transform:none}
+}
+
 </style>
 </head>
 <body>
