@@ -209,13 +209,15 @@ function sendMessage() {
 
 
 
+function escapeChatText(value) { return $("<div>").text(String(value)).html(); }
+
 function appendClientBubble(msg) {
     const id = "temp-" + Date.now();
 
     $("#chat-messages").append(`
         <div class="message sent temp-msg" data-msg-id="${id}">
             <div class="message-content">
-                <div class="message-bubble">${msg}</div>
+                <div class="message-bubble">${escapeChatText(msg).replace(/\n/g, "<br>")}</div>
                 <div class="message-time">Sending...</div>
             </div>
         </div>
@@ -393,13 +395,12 @@ function startEdit(id) {
     const bubble = $(`.message[data-msg-id='${id}'] .message-bubble`);
     const old = bubble.text();
 
-    bubble.html(`
-        <textarea class="edit-textarea">${old}</textarea>
-        <div class="edit-actions">
-            <button class="edit-save" data-id="${id}">Save</button>
-            <button class="edit-cancel">Cancel</button>
-        </div>
-    `);
+    const editor = $("<textarea>", { class: "edit-textarea", maxlength: 2000, "aria-label": "Edit your message" }).val(old);
+    const actions = $("<div>", { class: "edit-actions" })
+        .append($("<button>", { class: "edit-save", "data-id": id, type: "button", text: "Save" }))
+        .append($("<button>", { class: "edit-cancel", type: "button", text: "Cancel" }));
+    bubble.empty().append(editor, actions);
+    editor.trigger("focus");
 }
 
 $(document).on("click", ".edit-save", function () {
