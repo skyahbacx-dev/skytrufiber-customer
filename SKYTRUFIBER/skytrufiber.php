@@ -92,6 +92,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
 
                 /* Save session */
                 $_SESSION['client_id'] = $user['id'];
+                $_SESSION['user'] = $user['id']; // Backward-compatible dashboard session key
+                $_SESSION['name'] = $user['full_name'];
                 $_SESSION['ticket_id'] = $ticketId;
 
                 /* Insert Client Inquiry */
@@ -107,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                     ]);
                 }
 
-                header("Location: /fiber/chat?ticket=$ticketId");
+                header("Location: /fiber/dashboard");
                 exit;
 
             } else {
