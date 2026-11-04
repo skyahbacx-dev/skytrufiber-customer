@@ -145,10 +145,10 @@ try {
 
         <!-- Message Action Popup -->
         <div id="msg-action-popup" class="msg-action-popup">
-            <button class="action-edit"><i class="fa-solid fa-pen"></i> Edit</button>
-            <button class="action-unsend"><i class="fa-solid fa-ban"></i> Unsend</button>
-            <button class="action-delete"><i class="fa-solid fa-trash"></i> Delete</button>
-            <button class="action-cancel" onclick="this.parentElement.style.display='none'">Cancel</button>
+            <button class="action-edit" type="button"><i class="fa-solid fa-pen"></i> Edit message</button>
+            <button class="action-unsend" type="button"><i class="fa-solid fa-arrow-rotate-left"></i> Unsend for everyone</button>
+            <button class="action-delete" type="button"><i class="fa-solid fa-eye-slash"></i> Delete for me</button>
+            <button class="action-cancel" type="button"><i class="fa-solid fa-xmark"></i> Cancel</button>
         </div>
 
     </div>
