@@ -97,6 +97,42 @@ h1{font-size:clamp(27px,4vw,38px);line-height:1.15;margin:7px 0 8px;color:var(--
 footer{text-align:center;color:#8a9bad;font-size:12px;padding:0 18px 26px}
 @media(max-width:700px){.top-inner{min-height:68px}.brand img{width:38px;height:38px}main{margin:26px auto 38px}.welcome{display:block}.account-chip{margin-top:17px}.actions{grid-template-columns:1fr;gap:11px}.action{min-height:0;padding:18px}.lower{grid-template-columns:1fr}.support-note{align-items:flex-start;flex-direction:column}.primary{width:100%;text-align:center}}
 @media(prefers-reduced-motion:reduce){.action{transition:none}}
+
+/* Modern customer dashboard refresh */
+:root{--navy:#071b35;--blue:#1677e8;--mint:#48d6a0;--line:#e4ebf4;--muted:#718198}
+body{background:radial-gradient(ellipse at 8% 0%,rgba(22,119,232,.11),transparent 32%),radial-gradient(ellipse at 92% 18%,rgba(72,214,160,.10),transparent 28%),#f5f8fc;color:#152b45}
+.topbar{background:linear-gradient(112deg,#061a34 0%,#0a3261 62%,#07568b 100%);position:relative;overflow:hidden}
+.topbar:after{content:"";position:absolute;width:420px;height:220px;right:-100px;top:-130px;border:1px solid #ffffff20;border-radius:50%;box-shadow:0 0 0 28px #ffffff08,0 0 0 58px #ffffff06;pointer-events:none}
+.top-inner{position:relative;z-index:1}
+main{margin-top:42px}
+.welcome{align-items:stretch;margin-bottom:30px}
+.welcome>div:first-child{align-self:center}
+h1{letter-spacing:-1.4px;font-weight:850}
+.eyebrow{color:#1677e8}
+.welcome-side{display:flex;gap:12px;align-items:stretch}
+.clock-card{min-width:210px;padding:15px 18px;border-radius:18px;color:#fff;background:linear-gradient(145deg,#0b2b50,#104d7a);box-shadow:0 14px 32px #0c31521c;display:flex;flex-direction:column;justify-content:center}
+.clock-label{font-size:9px;letter-spacing:.13em;font-weight:800;color:#9dd8ff}
+.clock-card strong{font-size:27px;letter-spacing:-1px;line-height:1.25;margin:5px 0;font-variant-numeric:tabular-nums}
+.clock-card span:last-child{font-size:11px;color:#d1e6f6}
+.account-chip{min-width:175px;border-radius:18px;box-shadow:0 12px 28px #12385c0a;display:flex;flex-direction:column;justify-content:center}
+.section-title{font-size:20px;letter-spacing:-.45px}
+.actions{gap:16px}
+.action{position:relative;min-height:150px;padding:23px;border-radius:20px;box-shadow:0 8px 24px #17395c08;transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s,border-color .28s}
+.action:before{content:"";position:absolute;inset:0 auto 0 0;width:4px;border-radius:20px 0 0 20px;background:linear-gradient(#1677e8,#48d6a0);opacity:0;transition:opacity .2s}
+.action:hover{transform:translateY(-5px);border-color:#b8d8f5;box-shadow:0 20px 42px #12385c16}
+.action:hover:before{opacity:1}
+.icon{border-radius:16px;background:linear-gradient(145deg,#e9f4ff,#e7faf3);color:#126fc8}
+.action h3{letter-spacing:-.3px}
+.panel{border-radius:20px;box-shadow:0 8px 24px #17395c08;padding:24px}
+.panel h2{letter-spacing:-.35px}
+.support-note{border:1px solid #d8eaf8;background:linear-gradient(110deg,#eaf6ff,#ecfbf5);border-radius:20px;padding:22px}
+.primary{border-radius:12px;background:linear-gradient(135deg,#1677e8,#0756c9);box-shadow:0 7px 16px #1677e82a;transition:transform .2s,box-shadow .2s}
+.primary:hover{transform:translateY(-2px);box-shadow:0 11px 22px #1677e83b}
+.logout{backdrop-filter:blur(8px);transition:background .2s}
+.logout:hover{background:#ffffff20}
+@media(max-width:760px){.welcome-side{margin-top:18px;display:grid;grid-template-columns:1fr 1fr}.clock-card{min-width:0}.account-chip{min-width:0}.clock-card strong{font-size:23px}}
+@media(max-width:430px){.welcome-side{grid-template-columns:1fr}.clock-card{min-height:100px}.account-chip{min-height:85px}}
+@media(prefers-reduced-motion:reduce){.action,.primary{transition:none}}
 </style>
 </head>
 <body>
@@ -107,7 +143,7 @@ footer{text-align:center;color:#8a9bad;font-size:12px;padding:0 18px 26px}
 <main>
   <section class="welcome">
     <div><div class="eyebrow">Your account at a glance</div><h1>Good day, <?= $name ?>!</h1><p class="sub">Choose what you need below. We’ve kept everything in one simple place.</p></div>
-    <div class="account-chip"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong><?php if ($email): ?><span style="margin-top:8px">Email</span><strong><?= $email ?></strong><?php endif; ?></div>
+    <div class="welcome-side"><div class="clock-card"><span class="clock-label">PHILIPPINE STANDARD TIME</span><strong id="live-clock">--:--:--</strong><span id="live-date">Loading date…</span></div><div class="account-chip"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong><?php if ($email): ?><span style="margin-top:8px">Email</span><strong><?= $email ?></strong><?php endif; ?></div></div>
   </section>
 
   <h2 class="section-title">What would you like to do?</h2>
@@ -143,5 +179,25 @@ footer{text-align:center;color:#8a9bad;font-size:12px;padding:0 18px 26px}
   <section class="support-note"><div><strong>Still need a hand?</strong><p>Our customer service team can help you with account and connection concerns.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></section>
 </main>
 <footer>SkyTruFiber by AHBA Development · Customer Portal</footer>
+
+<script>
+(function(){
+ const clock=document.getElementById('live-clock'),date=document.getElementById('live-date');
+ if(!clock||!date)return;
+ const tf=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+ const df=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',weekday:'long',year:'numeric',month:'long',day:'numeric'});
+ function tick(){const n=new Date();clock.textContent=tf.format(n);date.textContent=df.format(n)}
+ tick();setInterval(tick,1000);
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+(function(){
+ if(!window.gsap||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ gsap.from('.welcome > div',{y:18,opacity:0,duration:.65,stagger:.12,ease:'power3.out'});
+ gsap.from('.action',{y:22,opacity:0,duration:.55,stagger:.09,delay:.12,ease:'power3.out'});
+ gsap.from('.lower .panel,.guides,.support-note',{y:18,opacity:0,duration:.5,stagger:.1,delay:.28,ease:'power2.out'});
+})();
+</script>
 </body>
 </html>
