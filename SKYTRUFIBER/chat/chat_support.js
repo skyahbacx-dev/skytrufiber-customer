@@ -105,13 +105,19 @@ $(document).on("click", ".suggest-btn", function () {
     $(".system-suggest").remove();
 
     const tempId = appendClientBubble(text);
-
-    $.post("/SKYTRUFIBER/chat/send_message_client.php", {
-        ticket: ticketId,
-        message: text
-    }).done(() => {
-        $(`.message[data-msg-id='${tempId}']`).remove();
-        fetchNewMessages();
+    $.ajax({
+        url: "/SKYTRUFIBER/chat/send_message_client.php",
+        method: "POST",
+        data: { ticket: ticketId, message: text },
+        dataType: "text"
+    }).done(raw => {
+        let res = {};
+        try { res = JSON.parse(raw); } catch (_) {}
+        if (res.status === "ok") confirmClientBubble(tempId, res);
+        else $(".message[data-msg-id='" + tempId + "']").remove();
+    }).fail(() => {
+        $(".message[data-msg-id='" + tempId + "']").remove();
+        alert("Unable to send your message. Please try again.");
     });
 });
 
@@ -176,38 +182,62 @@ function applyTicketStatus(status) {
 /* ============================================================
 SEND MESSAGE
 ============================================================ */
-function sendMessage() {
+let sendingMessage = false;
 
-    const msg = $("#message-input").val().trim();
+function confirmClientBubble(tempId, res) {
+    const bubble = $(".message[data-msg-id='" + tempId + "']");
+    if (!bubble.length) return;
+    if (res && res.message_id) {
+        bubble.attr("data-msg-id", String(res.message_id)).removeClass("temp-msg");
+        bubble.find(".message-time").text(res.time || "Sent");
+    } else bubble.remove();
+}
+
+function sendMessage() {
+    if (sendingMessage) return;
+    const input = $("#message-input");
+    const msg = input.val().trim();
     if (!msg) return;
 
     $(".system-suggest").remove();
-
     const tempId = appendClientBubble(msg);
-    $("#message-input").val("");
+    input.val("");
+    sendingMessage = true;
+    $("#send-btn").prop("disabled", true);
 
-    $.post("/SKYTRUFIBER/chat/send_message_client.php", {
-        ticket: ticketId,
-        message: msg
+    $.ajax({
+        url: "/SKYTRUFIBER/chat/send_message_client.php",
+        method: "POST",
+        data: { ticket: ticketId, message: msg },
+        dataType: "text"
     }).done(raw => {
-
         let res = {};
-        try { res = JSON.parse(raw); } catch {}
-
-        // remove temp immediately
-        $(`.message[data-msg-id='${tempId}']`).remove();
-
-        // now fetch actual DB message
-        fetchNewMessages();
-
-        if (res.first_message === true) {
-            insertSuggestionBubble();
+        try { res = JSON.parse(raw); } catch (_) {}
+        if (raw.trim() === "FORCE_LOGOUT") {
+            window.location.href = "/SKYTRUFIBER/chat/logout.php";
+            return;
         }
-
+        if (res.status !== "ok") {
+            $(".message[data-msg-id='" + tempId + "']").remove();
+            if (!input.val()) input.val(msg);
+            alert(res.msg === "ticket_resolved"
+                ? "This conversation has been resolved. Please refresh the page."
+                : "Your message was not sent. Please try again.");
+            return;
+        }
+        // Keep the rendered bubble; skip the immediate full-history reload.
+        confirmClientBubble(tempId, res);
+        if (res.first_message === true) insertSuggestionBubble();
+    }).fail(() => {
+        $(".message[data-msg-id='" + tempId + "']").remove();
+        if (!input.val()) input.val(msg);
+        alert("Unable to send your message. Please try again.");
+    }).always(() => {
+        sendingMessage = false;
+        $("#send-btn").prop("disabled", false);
+        input.trigger("focus");
     });
 }
-
-
 
 function escapeChatText(value) { return $("<div>").text(String(value)).html(); }
 
