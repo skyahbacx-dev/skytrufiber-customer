@@ -1,0 +1,24 @@
+{
+  "id": "/fiber",
+  "name": "SkyTruFiber Customer Portal",
+  "short_name": "SkyTruFiber",
+  "description": "Manage your SkyTruFiber account and contact customer support.",
+  "start_url": "/fiber",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait-primary",
+  "background_color": "#071a35",
+  "theme_color": "#08264d",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
