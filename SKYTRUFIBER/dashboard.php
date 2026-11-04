@@ -349,12 +349,12 @@ footer{padding-top:4px}
 
 /* Simplified dashboard actions and in-page Help Center navigation */
 .quick-access-wrap{position:relative;margin-top:13px}
-.quick-access-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid #ffffff45;border-radius:11px;padding:9px 12px;background:#ffffff18;color:#fff;font:700 12px inherit;cursor:pointer;transition:background .18s ease}
+.quick-access-btn{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;border:1px solid #ffffff45;border-radius:11px;padding:9px 12px;background:#ffffff18;color:#fff;font-family:inherit;font-size:12px;font-weight:700;cursor:pointer;transition:background .18s ease}
 .quick-access-btn:hover,.quick-access-btn[aria-expanded="true"]{background:#ffffff2b}
 .quick-access-btn span{font-size:17px;line-height:10px}
 .quick-access-menu{position:absolute;z-index:30;top:calc(100% + 7px);left:0;right:0;padding:6px;border:1px solid #ffffff30;border-radius:12px;background:#fff;box-shadow:0 14px 32px #00172c35}
 .quick-access-menu[hidden]{display:none}
-.quick-access-menu button{display:block;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#17324d;text-align:left;font:650 12px inherit;cursor:pointer}
+.quick-access-menu button{display:block;width:100%;padding:10px 11px;border:0;border-radius:8px;background:transparent;color:#17324d;text-align:left;font-family:inherit;font-size:12px;font-weight:650;cursor:pointer}
 .quick-access-menu button:hover{background:#edf6ff;color:#126fc8}
 .help-view{animation:help-view-in .22s ease both}
 .help-view[hidden]{display:none}
