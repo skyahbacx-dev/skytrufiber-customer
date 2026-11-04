@@ -919,3 +919,173 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
         right: calc(100% - 4px);
     }
 }
+
+
+/* ============================================================
+   FINAL CUSTOMER CHAT POLISH — HEADER, WATERMARK, MICRO-INTERACTIONS
+============================================================ */
+.chat-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+}
+.chat-header-left {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.chat-header-right {
+    display: flex !important;
+    flex: 0 0 auto;
+    flex-direction: row !important;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 9px !important;
+    white-space: nowrap;
+}
+.chat-dashboard-link,
+#theme-toggle,
+#logout-btn {
+    flex: 0 0 auto;
+    min-height: 40px;
+    box-sizing: border-box;
+}
+.chat-dashboard-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 112px;
+}
+#theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+#logout-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 92px;
+}
+
+/* Soft branded watermark behind messages; it never intercepts clicks. */
+#chat-messages {
+    isolation: isolate;
+    position: relative;
+    overflow: auto;
+}
+#chat-messages::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
+    inset: 0;
+    background-image: url("/SKYTRUFIBER.png");
+    background-repeat: no-repeat;
+    background-position: center 48%;
+    background-size: min(34%, 260px);
+    opacity: .075;
+    filter: blur(1.5px);
+}
+:root[data-theme="dark"] #chat-messages::before {
+    opacity: .095;
+    filter: blur(2px);
+}
+
+/* A little more life without distracting from the conversation. */
+.message-bubble {
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+.message.received .message-bubble:hover,
+.message.sent .message-bubble:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 22px rgba(13, 45, 78, .12);
+}
+.suggest-btn,
+.chat-dashboard-link,
+#theme-toggle,
+#logout-btn,
+#send-btn {
+    transition: transform .18s ease, box-shadow .18s ease, background .18s ease, filter .18s ease;
+}
+.suggest-btn:active,
+.chat-dashboard-link:active,
+#theme-toggle:active,
+#logout-btn:active,
+#send-btn:active {
+    transform: scale(.97);
+}
+#message-input:focus-visible {
+    outline: none;
+}
+.chat-header-right button:disabled {
+    opacity: .6;
+    cursor: wait;
+}
+
+@media (max-width: 768px) {
+    .chat-header {
+        align-items: center;
+        gap: 8px;
+    }
+    .chat-header-left {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    .chat-header-right {
+        flex: 0 0 auto;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+    .chat-dashboard-link {
+        min-width: 0;
+        padding: 8px 9px;
+        gap: 6px;
+    }
+    #theme-toggle {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+    }
+    #logout-btn {
+        min-width: 0;
+        padding: 8px 9px;
+        min-height: 36px;
+        gap: 6px;
+    }
+}
+@media (max-width: 390px) {
+    .chat-header {
+        padding-left: 9px;
+        padding-right: 9px;
+    }
+    .chat-header-right {
+        gap: 4px !important;
+    }
+    .chat-dashboard-link {
+        width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0;
+        font-size: 0;
+    }
+    .chat-dashboard-link i { font-size: 13px; }
+    #theme-toggle {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+    }
+    #logout-btn {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0;
+        font-size: 0;
+    }
+    #logout-btn i { font-size: 13px; }
+}
