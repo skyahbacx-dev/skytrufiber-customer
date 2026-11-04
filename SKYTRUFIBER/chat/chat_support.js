@@ -513,7 +513,7 @@ $(document).on("click", ".action-delete", function () {
     } catch (_) {
         alert("Your browser could not save this view preference. Please check your browser storage settings.");
     }
-}
+});
 
 /* ============================================================
 LOGOUT BUTTON
