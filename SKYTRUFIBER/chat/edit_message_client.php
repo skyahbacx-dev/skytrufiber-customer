@@ -16,6 +16,8 @@ if ($id <= 0 || $ticket <= 0) {
     exit;
 }
 
+if (mb_strlen($message, "UTF-8") > 2000) { echo json_encode(["status" => "error", "msg" => "Message is too long (maximum 2,000 characters)"]); exit; }
+
 if ($message === "") {
     echo json_encode(["status" => "error", "msg" => "Message cannot be empty"]);
     exit;
