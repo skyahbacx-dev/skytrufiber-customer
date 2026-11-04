@@ -219,7 +219,7 @@ body.modal-open{overflow:hidden}
  const dialogs=[...document.querySelectorAll('.portal-modal')];
  let lastTrigger=null;
  function close(dialog){
-  dialog.classList.remove('is-open');dialog.setAttribute('aria-hidden','true');
+  dialog.classList.remove('is-open');dialog.style.display='';dialog.setAttribute('aria-hidden','true');
   document.body.classList.remove('modal-open');
   if(lastTrigger&&lastTrigger.focus)lastTrigger.focus();
  }
