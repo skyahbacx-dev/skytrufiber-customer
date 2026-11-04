@@ -907,3 +907,15 @@ body{font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-ser
         height: 27px;
     }
 }
+
+
+/* Keep the message action button reachable from the bubble hover area.
+   The previous 7px gap caused hover to end before the pointer reached the button. */
+.message.sent .action-toolbar {
+    right: calc(100% - 4px);
+}
+@media (max-width: 768px) {
+    .message.sent .action-toolbar {
+        right: calc(100% - 4px);
+    }
+}
