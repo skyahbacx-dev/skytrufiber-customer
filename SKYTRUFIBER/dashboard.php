@@ -1,22 +1,147 @@
 <?php
-session_start();
-if (!isset($_SESSION['user'])) {
-  header("Location: skytrufiber.php");
-  exit;
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+require_once __DIR__ . '/../db_connect.php';
+
+$clientId = $_SESSION['client_id'] ?? $_SESSION['user'] ?? null;
+if (!$clientId) {
+    header('Location: /fiber');
+    exit;
 }
+
+try {
+    $userStmt = $conn->prepare("SELECT id, full_name, email FROM users WHERE id = :id LIMIT 1");
+    $userStmt->execute([':id' => $clientId]);
+    $customer = $userStmt->fetch(PDO::FETCH_ASSOC);
+    if (!$customer) {
+        $_SESSION = [];
+        session_destroy();
+        header('Location: /fiber');
+        exit;
+    }
+
+    $ticketStmt = $conn->prepare("
+        SELECT id, status, created_at
+        FROM tickets
+        WHERE client_id = :id
+        ORDER BY created_at DESC, id DESC
+        LIMIT 1
+    ");
+    $ticketStmt->execute([':id' => $clientId]);
+    $latestTicket = $ticketStmt->fetch(PDO::FETCH_ASSOC) ?: null;
+} catch (PDOException $e) {
+    error_log('Customer dashboard load failed: ' . $e->getMessage());
+    http_response_code(503);
+    exit('We could not load your dashboard right now. Please try again shortly.');
+}
+
+$name = htmlspecialchars($customer['full_name'] ?? 'Customer', ENT_QUOTES, 'UTF-8');
+$email = htmlspecialchars($customer['email'] ?? '', ENT_QUOTES, 'UTF-8');
+$ticketId = $latestTicket ? (int)$latestTicket['id'] : 0;
+$status = $latestTicket ? ucfirst(strtolower((string)$latestTicket['status'])) : 'No support request yet';
+$statusClass = $latestTicket && strtolower((string)$latestTicket['status']) === 'resolved' ? 'resolved' : 'pending';
+$chatUrl = $ticketId ? '/fiber/chat?ticket=' . $ticketId : '/fiber/chat';
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#082d58">
 <link rel="icon" type="image/png" href="/SKYTRUFIBER.png">
 <link rel="apple-touch-icon" href="/SKYTRUFIBER.png">
-<meta charset="UTF-8">
-<title>Dashboard - SkyTruFiber</title>
+<title>My Dashboard | SkyTruFiber</title>
+<style>
+:root{--navy:#082d58;--blue:#0879bd;--ink:#17324d;--muted:#64788d;--line:#e1eaf2;--soft:#f3f8fc}
+*{box-sizing:border-box}
+body{margin:0;background:#f3f7fb;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+a{color:inherit}
+.topbar{background:linear-gradient(110deg,#082d58,#075b91);color:#fff}
+.top-inner{width:min(1120px,calc(100% - 36px));margin:auto;min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;letter-spacing:.01em}
+.brand img{width:44px;height:44px;object-fit:contain;border-radius:50%;background:#fff}
+.brand small{display:block;font-size:11px;font-weight:500;opacity:.78;letter-spacing:.08em;text-transform:uppercase}
+.logout{color:#fff;text-decoration:none;border:1px solid #ffffff70;border-radius:999px;padding:9px 15px;font-size:13px;font-weight:700}
+main{width:min(1120px,calc(100% - 36px));margin:38px auto 56px}
+.welcome{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:26px}
+.eyebrow{font-size:12px;color:var(--blue);font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+h1{font-size:clamp(27px,4vw,38px);line-height:1.15;margin:7px 0 8px;color:var(--navy)}
+.sub{color:var(--muted);margin:0;line-height:1.6}
+.account-chip{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 16px;min-width:190px}
+.account-chip span{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.account-chip strong{display:block;margin-top:4px;font-size:14px;overflow-wrap:anywhere}
+.section-title{font-size:18px;color:var(--navy);margin:0 0 13px}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.action{display:flex;gap:16px;align-items:flex-start;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px;min-height:140px;transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease}
+.action:hover{transform:translateY(-2px);border-color:#9bcce9;box-shadow:0 12px 28px #153b5b12}
+.icon{width:48px;height:48px;flex:0 0 48px;border-radius:14px;background:#eaf5fc;color:#0879bd;display:grid;place-items:center}
+.icon svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.action h3{margin:2px 0 6px;color:var(--navy);font-size:17px}
+.action p{margin:0;color:var(--muted);font-size:13px;line-height:1.55}
+.arrow{margin-left:auto;color:#8ba3b7;font-size:22px}
+.lower{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:22px}
+.panel h2{margin:0 0 14px;font-size:17px;color:var(--navy)}
+.ticket-row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--line);font-size:13px}
+.ticket-row:first-of-type{border-top:0}
+.ticket-row span{color:var(--muted)}
+.pill{display:inline-block;border-radius:999px;background:#fff4dc;color:#8a5b00;padding:5px 10px;font-size:11px;font-weight:800}
+.pill.resolved{background:#e7f7ee;color:#187447}
+.guides details{border-top:1px solid var(--line);padding:12px 0}
+.guides details:first-of-type{border-top:0}
+.guides summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--ink)}
+.guides p{font-size:13px;line-height:1.6;color:var(--muted);margin:9px 0 0}
+.support-note{margin-top:20px;border-radius:16px;background:#e9f5fc;padding:17px 20px;display:flex;justify-content:space-between;align-items:center;gap:15px}
+.support-note strong{display:block;color:var(--navy);margin-bottom:4px}
+.support-note p{margin:0;color:#506b82;font-size:13px;line-height:1.5}
+.primary{display:inline-block;text-decoration:none;background:var(--blue);color:#fff;padding:11px 16px;border-radius:10px;font-weight:750;font-size:13px;white-space:nowrap}
+footer{text-align:center;color:#8a9bad;font-size:12px;padding:0 18px 26px}
+@media(max-width:700px){.top-inner{min-height:68px}.brand img{width:38px;height:38px}main{margin:26px auto 38px}.welcome{display:block}.account-chip{margin-top:17px}.actions{grid-template-columns:1fr;gap:11px}.action{min-height:0;padding:18px}.lower{grid-template-columns:1fr}.support-note{align-items:flex-start;flex-direction:column}.primary{width:100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){.action{transition:none}}
+</style>
 </head>
 <body>
-<h2>Welcome <?= htmlspecialchars($_SESSION['name']) ?> (Account #<?= htmlspecialchars($_SESSION['user']) ?>)</h2>
-<p>This is your SkyTruFiber dashboard.</p>
-<a href="logout.php">Logout</a>
+<header class="topbar"><div class="top-inner">
+  <div class="brand"><img src="/SKYTRUFIBER.png" alt=""><div>SkyTruFiber<small>Customer Portal</small></div></div>
+  <a class="logout" href="/fiber/logout">Log out</a>
+</div></header>
+<main>
+  <section class="welcome">
+    <div><div class="eyebrow">Your account at a glance</div><h1>Good day, <?= $name ?>!</h1><p class="sub">Choose what you need below. We’ve kept everything in one simple place.</p></div>
+    <div class="account-chip"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong><?php if ($email): ?><span style="margin-top:8px">Email</span><strong><?= $email ?></strong><?php endif; ?></div>
+  </section>
+
+  <h2 class="section-title">What would you like to do?</h2>
+  <section class="actions" aria-label="Main actions">
+    <a class="action" href="#account"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><span><h3>My Account</h3><p>View your customer ID and registered account information.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>"><span class="icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5 9 9 0 0 1-4-.9L3 21l1.9-5.5a9 9 0 0 1-.9-4A8.5 8.5 0 0 1 12.5 3H13a8.5 8.5 0 0 1 8 8z"/></svg></span><span><h3>Get Support</h3><p>Open your support conversation and chat with our team.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="#concerns"><span class="icon"><svg viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13"/><path d="M3 6h.01M3 12h.01M3 18h.01"/></svg></span><span><h3>My Concerns</h3><p>See the latest status of your support request.</p></span><span class="arrow">›</span></a>
+    <a class="action" href="#help"><span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.2 1.8c-1.1 1-1.8 1.3-1.8 3M12 17h.01"/></svg></span><span><h3>Help Center</h3><p>Read quick answers and simple troubleshooting steps.</p></span><span class="arrow">›</span></a>
+  </section>
+
+  <section class="lower">
+    <div class="panel" id="account"><h2>My Account</h2>
+      <div class="ticket-row"><span>Account name</span><strong><?= $name ?></strong></div>
+      <div class="ticket-row"><span>Customer ID</span><strong>#<?= (int)$customer['id'] ?></strong></div>
+      <div class="ticket-row"><span>Email address</span><strong><?= $email ?: 'Not provided' ?></strong></div>
+    </div>
+    <div class="panel" id="concerns"><h2>My Latest Concern</h2>
+      <?php if ($latestTicket): ?>
+      <div class="ticket-row"><span>Request number</span><strong>#<?= $ticketId ?></strong></div>
+      <div class="ticket-row"><span>Current status</span><strong><span class="pill <?= $statusClass ?>"><?= htmlspecialchars($status, ENT_QUOTES, 'UTF-8') ?></span></strong></div>
+      <div class="ticket-row"><span>Started</span><strong><?= htmlspecialchars(date('M j, Y', strtotime($latestTicket['created_at'])), ENT_QUOTES, 'UTF-8') ?></strong></div>
+      <a class="primary" style="display:block;text-align:center;margin-top:12px" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Open conversation</a>
+      <?php else: ?><p class="sub">You don’t have a support request yet. Start a conversation whenever you need help.</p><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Get support</a><?php endif; ?>
+    </div>
+  </section>
+
+  <section class="panel guides" id="help" style="margin-top:20px"><h2>Help Center · Quick answers</h2>
+    <details><summary>My internet is slow. What should I do?</summary><p>Restart your router by unplugging its power for about 30 seconds, then plug it back in and allow it to reconnect. If the issue continues, choose Get Support and tell our team when the slowdown happens.</p></details>
+    <details><summary>I have no internet connection.</summary><p>Check that your router is powered on and that its cables are firmly connected. If the LOS light is red or blinking, avoid resetting the router and contact support so our team can assist.</p></details>
+    <details><summary>How do I follow up on my concern?</summary><p>Choose My Concerns to view the latest ticket status, then select Open conversation to continue your existing support chat.</p></details>
+    <details><summary>How do I contact customer service?</summary><p>Select Get Support. Your existing support conversation will open so you can continue without losing your previous messages.</p></details>
+  </section>
+  <section class="support-note"><div><strong>Still need a hand?</strong><p>Our customer service team can help you with account and connection concerns.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></section>
+</main>
+<footer>SkyTruFiber by AHBA Development · Customer Portal</footer>
 </body>
 </html>
-
