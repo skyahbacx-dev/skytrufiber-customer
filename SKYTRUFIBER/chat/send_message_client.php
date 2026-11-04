@@ -30,7 +30,7 @@ $stmt = $conn->prepare("
         WHERE t.client_id = ? AND LOWER(t.status) <> 'resolved'
         RETURNING id, created_at
     )
-    SELECT t.client_id, t.status, f.is_first, i.id AS message_id, i.created_at
+    SELECT t.client_id, t.status, CASE WHEN f.is_first THEN 1 ELSE 0 END AS is_first, i.id AS message_id, i.created_at
     FROM ticket t CROSS JOIN first_message f
     LEFT JOIN inserted i ON TRUE
 ");
@@ -50,7 +50,7 @@ if (empty($result["message_id"])) {
 }
 echo json_encode([
     "status" => "ok",
-    "first_message" => (bool)$result["is_first"],
+    "first_message" => ((int)$result["is_first"] === 1),
     "message_id" => (int)$result["message_id"],
     "time" => date("g:i A", strtotime($result["created_at"]))
 ]);
