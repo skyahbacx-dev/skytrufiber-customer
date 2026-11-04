@@ -373,6 +373,31 @@ footer{padding-top:4px}
 @media(max-width:520px){.quick-access-wrap{margin-top:11px}.help-contact{align-items:stretch;flex-direction:column}.help-contact .primary{text-align:center}}
 @media(prefers-reduced-motion:reduce){.help-view{animation:none}}
 
+
+/* Quick Access: keep it in the welcome card, with an unclipped, readable menu. */
+.welcome{overflow:visible}
+.welcome-side{display:flex;align-items:center;justify-content:flex-end;gap:12px;min-width:0}
+.clock-card{min-width:205px}
+.quick-access-wrap{position:relative;z-index:40;align-self:center;margin:0;min-width:148px}
+.quick-access-btn{min-height:46px;padding:12px 14px;border:1px solid #ffffff55;border-radius:12px;background:#ffffff1c;color:#fff;font-size:13px;box-shadow:0 8px 20px #00172c20}
+.quick-access-btn span{font-size:18px}
+.quick-access-menu{position:absolute;top:calc(100% + 9px);left:auto;right:0;width:220px;max-width:min(220px,calc(100vw - 40px));padding:7px;border:1px solid #dce7f1;border-radius:14px;background:#fff;box-shadow:0 18px 42px #071b3530;z-index:100}
+.quick-access-menu button,.quick-access-menu a{display:block;width:100%;padding:12px;border:0;border-radius:9px;background:transparent;color:#17324d;text-align:left;text-decoration:none;font-family:inherit;font-size:13px;font-weight:650;line-height:1.3;cursor:pointer}
+.quick-access-menu button:hover,.quick-access-menu a:hover{background:#edf6ff;color:#126fc8}
+.quick-access-menu[hidden]{display:none}
+@media(max-width:760px){
+ .welcome-side{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+ .clock-card{min-width:0;width:100%;padding:15px}
+ .clock-card strong{font-size:clamp(21px,5vw,27px)}
+ .quick-access-wrap{min-width:125px}
+ .quick-access-btn{width:100%;padding:11px 10px}
+}
+@media(max-width:430px){
+ .welcome-side{grid-template-columns:1fr}
+ .quick-access-wrap{width:100%;min-width:0}
+ .quick-access-menu{left:0;right:0;width:100%;max-width:none}
+}
+
 </style>
 </head>
 <body>
@@ -384,7 +409,7 @@ footer{padding-top:4px}
   <div id="dashboard-home">
   <section class="welcome">
     <div><div class="eyebrow">Your account at a glance</div><h1>Good day, <?= $name ?>!</h1><p class="sub">Choose what you need below. We’ve kept everything in one simple place.</p></div>
-    <div class="welcome-side"><div class="clock-card"><span class="clock-label">PHILIPPINE STANDARD TIME</span><strong id="live-clock">--:--:--</strong><span id="live-date">Loading date…</span><div class="quick-access-wrap"><button type="button" class="quick-access-btn" id="quick-access-toggle" aria-expanded="false">Quick Access <span>⌄</span></button><div class="quick-access-menu" id="quick-access-menu" hidden><button type="button" data-open-modal="account-modal">My Account</button><button type="button" data-open-modal="concerns-modal">My Latest Concerns</button><button type="button" data-open-help>Help Center</button></div></div></div></div>
+    <div class="welcome-side"><div class="clock-card"><span class="clock-label">PHILIPPINE STANDARD TIME</span><strong id="live-clock" aria-live="off">--:--:--</strong><span id="live-date">Loading date…</span></div><div class="quick-access-wrap"><button type="button" class="quick-access-btn" id="quick-access-toggle" aria-expanded="false" aria-controls="quick-access-menu">Quick Access <span aria-hidden="true">⌄</span></button><div class="quick-access-menu" id="quick-access-menu" hidden><button type="button" data-open-modal="account-modal">My Account</button><button type="button" data-open-modal="concerns-modal">My Latest Concerns</button><button type="button" data-open-help>Help Center</button><a href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Get Support</a></div></div></div>
   </section>
 
   <h2 class="section-title">What would you like to do?</h2>
@@ -429,7 +454,6 @@ footer{padding-top:4px}
       <details><summary>How do I follow up on my concern?</summary><p>Choose My Concerns on your dashboard to view the latest ticket status, then select Open conversation to continue your existing support chat.</p></details>
       <details><summary>How do I contact customer service?</summary><p>Select Get Support on your dashboard. Your existing support conversation will open so you can continue without losing your previous messages.</p></details>
     </section>
-    <div class="help-contact"><div><strong>Still have a question?</strong><p>Our team can help with your account or connection concern.</p></div><a class="primary" href="<?= htmlspecialchars($chatUrl, ENT_QUOTES, 'UTF-8') ?>">Chat with Support</a></div>
   </section>
 </main>
 <footer>SkyTruFiber by AHBA Development · Customer Portal</footer>
@@ -464,14 +488,17 @@ footer{padding-top:4px}
  const help=document.getElementById('help-center');
  function showHelp(){if(home)home.hidden=true;if(help)help.hidden=false;window.location.hash='help-center';window.scrollTo({top:0,behavior:'smooth'});}
  function showDashboard(){if(help)help.hidden=true;if(home)home.hidden=false;window.location.hash='dashboard';window.scrollTo({top:0,behavior:'smooth'});}
+ function closeQuickAccess(){const menu=document.getElementById('quick-access-menu'),button=document.getElementById('quick-access-toggle');if(menu)menu.hidden=true;if(button)button.setAttribute('aria-expanded','false');}
+ document.addEventListener('keydown',e=>{if(e.key==='Escape')closeQuickAccess();});
  document.addEventListener('click',e=>{
   const helpTrigger=e.target.closest('[data-open-help]');
-  if(helpTrigger){e.preventDefault();showHelp();return;}
+  if(helpTrigger){e.preventDefault();closeQuickAccess();showHelp();return;}
   if(e.target.closest('[data-show-dashboard]')){e.preventDefault();showDashboard();return;}
   const quickToggle=e.target.closest('#quick-access-toggle');
   const quickMenu=document.getElementById('quick-access-menu');
   if(quickToggle&&quickMenu){const expanded=quickToggle.getAttribute('aria-expanded')==='true';quickToggle.setAttribute('aria-expanded',String(!expanded));quickMenu.hidden=expanded;return;}
-  if(quickMenu&&!e.target.closest('.quick-access-wrap')){quickMenu.hidden=true;const b=document.getElementById('quick-access-toggle');if(b)b.setAttribute('aria-expanded','false');}
+  if(quickMenu&&!e.target.closest('.quick-access-wrap'))closeQuickAccess();
+  if(e.target.closest('#quick-access-menu a'))closeQuickAccess();
  });
  if(window.location.hash==='#help-center')showHelp();
 })();
@@ -481,10 +508,11 @@ footer{padding-top:4px}
 (function(){
  const clock=document.getElementById('live-clock'),date=document.getElementById('live-date');
  if(!clock||!date)return;
- const tf=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+ const tf=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',hour:'numeric',minute:'2-digit',second:'2-digit',hour12:true});
  const df=new Intl.DateTimeFormat('en-PH',{timeZone:'Asia/Manila',weekday:'long',year:'numeric',month:'long',day:'numeric'});
  function tick(){const n=new Date();clock.textContent=tf.format(n);date.textContent=df.format(n)}
- tick();setInterval(tick,1000);
+ tick();let clockTimer=setInterval(tick,1000);
+ document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInterval(clockTimer)}else{tick();clockTimer=setInterval(tick,1000)}});
 })();
 </script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
