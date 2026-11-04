@@ -61,6 +61,8 @@ if (strtolower($ticket["status"]) === "resolved") {
 /* ============================================================
    EMPTY MESSAGE CHECK
 ============================================================ */
+if (mb_strlen($message, "UTF-8") > 2000) { echo json_encode(["status" => "error", "msg" => "message_too_long"]); exit; }
+
 if ($message === "") {
     echo json_encode(["status" => "empty"]);
     exit;
