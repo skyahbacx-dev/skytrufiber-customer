@@ -9,11 +9,14 @@
   var dismissedForPage = false;
 
   var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  // Keep the install invitation on phones/tablets; desktop browsers should not show it.
+  var isMobileDevice = /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent) ||
+    (window.matchMedia && window.matchMedia('(max-width: 700px)').matches);
   var isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) ||
     window.navigator.standalone === true;
 
   function showCard() {
-    if (!card || isStandalone || dismissedForPage) return;
+    if (!card || isStandalone || dismissedForPage || !isMobileDevice) return;
     card.hidden = false;
   }
 
@@ -35,7 +38,7 @@
 
   // Keep the install invitation visible even if the browser has not yet
   // decided that it can offer a native install prompt.
-  if (!isStandalone) {
+  if (!isStandalone && isMobileDevice) {
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', showCard, { once: true });
     } else {
