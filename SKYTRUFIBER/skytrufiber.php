@@ -3,6 +3,19 @@ session_start();
 require_once __DIR__ . '/../db_connect.php';
 
 $message = '';
+$isAjaxLogin = isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest';
+
+function login_json_response($status, $success, $message, $redirect = null) {
+    http_response_code($status);
+    header('Content-Type: application/json; charset=utf-8');
+    header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+    echo json_encode([
+        'success' => $success,
+        'message' => $message,
+        'redirect' => $redirect
+    ]);
+    exit;
+}
 
 /* ============================================================
    LOGIN HANDLER
@@ -102,20 +115,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
                 $_SESSION['name'] = $user['full_name'];
                 $_SESSION['ticket_id'] = $ticketId;
 
+                if ($isAjaxLogin) login_json_response(200, true, 'Sign-in successful.', '/fiber/dashboard');
                 header("Location: /fiber/dashboard");
                 exit;
 
             } else {
-                $message = "❌ Invalid login credentials.";
+                $message = "Invalid login credentials. Please check your email/name and password.";
+                if ($isAjaxLogin) login_json_response(401, false, $message);
             }
 
-        } catch (PDOException $e) {
-            $message = "⚠ Database error: " . htmlspecialchars($e->getMessage());
+        } catch (Throwable $e) {
+            // Keep customer details and database internals out of browser responses.
+            error_log('[customer-login] Login operation failed: ' . get_class($e));
+            $message = "We couldn't sign you in right now. Please try again in a moment.";
+            if ($isAjaxLogin) login_json_response(503, false, $message);
         }
 
     } else {
-        $message = "⚠ Please fill in all fields.";
+        $message = "Please enter both your email/name and password.";
+        if ($isAjaxLogin) login_json_response(422, false, $message);
     }
+
+    if ($isAjaxLogin) login_json_response(400, false, 'Unable to process the sign-in request. Please try again.');
 }
 ?>
 <!DOCTYPE html>
@@ -126,9 +147,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script>
-/* no scrollbar flash while the card rises into view */
-document.documentElement.classList.add('intro');
-setTimeout(function(){ document.documentElement.classList.remove('intro'); }, 3600);
+/* Keep the login page immediately usable; avoid a multi-second intro lockout. */
+document.documentElement.classList.remove('intro');
 </script>
 <title>SkyTruFiber Customer Portal</title>
 
@@ -161,8 +181,8 @@ html.intro, html.intro body{ overflow:hidden; }
     position:relative;
     z-index:1;
     overflow:hidden;
-    --pd:1.5s;                       /* delay before the card rises (coin goes first) */
-    animation:cardPop 1s cubic-bezier(.2,.8,.2,1) var(--pd) both;
+    --pd:0s;
+    animation:none;
 }
 
 /* 3D coin sits here: the canvas draws the coin over this empty box */
@@ -205,14 +225,13 @@ html.intro, html.intro body{ overflow:hidden; }
 .container > .message,
 .container > .small-links,
 #loginForm > :not(textarea){
-    animation:rise .6s cubic-bezier(.2,.8,.2,1) both;
-    animation-delay:calc(var(--pd) + .55s);
+    animation:none;
 }
-#loginForm > :nth-child(1){ animation-delay:calc(var(--pd) + .65s); }
-#loginForm > :nth-child(2){ animation-delay:calc(var(--pd) + .73s); }
-#loginForm > :nth-child(3){ animation-delay:calc(var(--pd) + .81s); }
-#loginForm > :nth-child(5){ animation-delay:calc(var(--pd) + .89s); }
-.container > .small-links{ animation-delay:calc(var(--pd) + .97s); }
+#loginForm > :nth-child(1),
+#loginForm > :nth-child(2),
+#loginForm > :nth-child(3),
+#loginForm > :nth-child(5),
+.container > .small-links{ animation:none; }
 
 .container img{
     width:150px;
@@ -319,9 +338,7 @@ button:hover{ background:#123a91; }
 
     <h2>Customer Service Portal</h2>
 
-<?php if ($message): ?>
-<p class="message"><?= htmlspecialchars($message) ?></p>
-<?php endif; ?>
+<p id="loginMessage" class="message" role="alert" aria-live="polite"<?= $message ? '' : ' hidden' ?>><?= htmlspecialchars($message) ?></p>
 
 <!-- LOGIN FORM -->
 <form id="loginForm" class="form-box visible" method="POST">
@@ -329,7 +346,7 @@ button:hover{ background:#123a91; }
     <input type="text" name="full_name" placeholder="Email or Full Name" required>
     <input type="password" name="password" placeholder="Password" required>
 
-    <button type="submit">Sign in to my account</button>
+    <button id="loginSubmit" type="submit">Sign in to my account</button>
 </form>
 
 <!-- FORGOT PASSWORD FORM -->
@@ -355,6 +372,59 @@ button:hover{ background:#123a91; }
 </div>
 
 <script>
+// AJAX sign-in: show errors in place without reloading the whole page.
+loginForm.addEventListener('submit', async event => {
+    event.preventDefault();
+    if (loginForm.dataset.submitting === '1') return;
+
+    const submitButton = document.getElementById('loginSubmit');
+    const messageBox = document.getElementById('loginMessage');
+    const originalButtonText = submitButton.textContent;
+    const formData = new FormData(loginForm);
+
+    loginForm.dataset.submitting = '1';
+    submitButton.disabled = true;
+    submitButton.textContent = 'Signing in…';
+    submitButton.setAttribute('aria-busy', 'true');
+    messageBox.hidden = true;
+    messageBox.textContent = '';
+
+    try {
+        const response = await fetch(window.location.href, {
+            method: 'POST',
+            body: formData,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' },
+            cache: 'no-store'
+        });
+        const data = await response.json();
+
+        if (response.ok && data.success && data.redirect) {
+            submitButton.textContent = 'Opening your dashboard…';
+            window.location.assign(data.redirect);
+            return;
+        }
+
+        messageBox.textContent = data.message || 'Sign-in failed. Please try again.';
+        messageBox.hidden = false;
+        const passwordField = loginForm.querySelector('input[name="password"]');
+        if (response.status === 401 && passwordField) {
+            passwordField.value = '';
+            passwordField.focus();
+        }
+    } catch (error) {
+        messageBox.textContent = 'Unable to connect right now. Please check your connection and try again.';
+        messageBox.hidden = false;
+    } finally {
+        if (loginForm.dataset.submitting === '1') {
+            loginForm.dataset.submitting = '0';
+            submitButton.disabled = false;
+            submitButton.textContent = originalButtonText;
+            submitButton.removeAttribute('aria-busy');
+        }
+    }
+});
+
 // Show forgot form
 forgotLink.onclick = e => {
     e.preventDefault();
@@ -560,7 +630,11 @@ sendForgotBtn.onclick = async () => {
   coinScene.add(glow);
 
   var texReady = false, coinT0 = -1, tiltX = 0, tiltY = 0, boost = 0, spinExtra = 0;
-  window.addEventListener('submit', function () { boost = 1; }, true);   // coin spins faster while the form submits
+  var animationStopped = false;
+  window.addEventListener('submit', function () {
+    animationStopped = true;
+    boost = 0;
+  }, true); // stop decorative rendering immediately when sign-in starts
 
   function easeOutBack(x) { var c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); }
   function easeInOut(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
@@ -621,8 +695,8 @@ sendForgotBtn.onclick = async () => {
 
   var clock = new T.Clock(), t = 0, shown = false;
   function frame() {
-    requestAnimationFrame(frame);
-    if (document.hidden) return;
+    if (animationStopped) return;
+    if (document.hidden) { requestAnimationFrame(frame); return; }
     var dt = Math.min(clock.getDelta(), 0.05) * SPEED;
     t += dt;
 
@@ -645,6 +719,7 @@ sendForgotBtn.onclick = async () => {
     renderer.render(scene, cam);
     if (updateCoin(dt)) { renderer.clearDepth(); renderer.render(coinScene, coinCam); }
     if (!shown) { shown = true; cv.classList.add('on'); }
+    if (!animationStopped) requestAnimationFrame(frame);
   }
   frame();
   console.info('[fiber3d] running: ' + N + ' strands, ' + PN + ' pulses' + (mobile ? ' (mobile)' : '') + (slow ? ' (reduced motion: slowed)' : ''));
