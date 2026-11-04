@@ -276,7 +276,8 @@ function loadMessages(scrollBottom = false) {
             return;
         }
 
-        $("#chat-messages").html(response ? html : emptyChatState());
+        const visibleHtml = filterHiddenMessages(html);
+        $("#chat-messages").html(visibleHtml ? visibleHtml : emptyChatState());
         bindActionToolbar();
         if (scrollBottom) scrollToBottom();
     })
@@ -309,6 +310,7 @@ function fetchNewMessages() {
         $("#chat-messages .temp-msg").remove();
 
         const temp = $("<div>").html(html);
+        hideLocallyDeletedMessages(temp);
 
         if (!temp.find(".message").length && !$("#chat-messages .message").length) {
             $("#chat-messages").html(emptyChatState());
@@ -349,71 +351,121 @@ function updateScrollButton() {
 $(document).on("click", "#scroll-bottom-btn", scrollToBottom);
 
 /* ============================================================
-ACTION POPUP
+MESSAGE ACTION MENU — edit, unsend, delete for me
 ============================================================ */
+function hiddenMessagesKey() {
+    return "skytrufiber_hidden_messages_" + String(ticketId || "current");
+}
+
+function getLocallyHiddenIds() {
+    try {
+        const value = JSON.parse(localStorage.getItem(hiddenMessagesKey()) || "[]");
+        return Array.isArray(value) ? value.map(String) : [];
+    } catch (_) { return []; }
+}
+
+function hideLocallyDeletedMessages(container) {
+    const hidden = new Set(getLocallyHiddenIds());
+    container.find(".message[data-msg-id]").each(function () {
+        if (hidden.has(String($(this).attr("data-msg-id")))) $(this).remove();
+    });
+}
+
+function filterHiddenMessages(html) {
+    const wrapper = $("<div>").html(html || "");
+    hideLocallyDeletedMessages(wrapper);
+    return wrapper.html();
+}
+
 function bindActionToolbar() {
     $(".more-btn").off("click").on("click", function (e) {
+        e.preventDefault();
         e.stopPropagation();
-        openPopup($(this).data("id"), this);
+        const id = $(this).attr("data-id");
+        if (id) openPopup(id, this);
     });
 }
 
 function openPopup(id, anchor) {
     const popup = $("#msg-action-popup");
     const modal = $(".chat-modal");
+    if (!popup.length || !modal.length) return;
 
-    popup.data("msgId", id).show();
+    popup.data("msgId", String(id)).css({display:"block",visibility:"hidden"});
+    const a = anchor.getBoundingClientRect();
+    const m = modal[0].getBoundingClientRect();
+    const width = popup.outerWidth();
+    const height = popup.outerHeight();
+    let left = a.right - m.left - width;
+    let top = a.bottom - m.top + 7;
 
-    const a = $(anchor).offset();
-    const m = modal.offset();
+    left = Math.max(8, Math.min(left, m.width - width - 8));
+    if (top + height > m.height - 12) top = Math.max(8, a.top - m.top - height - 7);
 
-    popup.css({
-        top: a.top - m.top + 30,
-        left: Math.max(5, a.left - m.left - popup.outerWidth() + 22)
-    });
-
+    popup.css({left:left + "px",top:top + "px",visibility:"visible"});
     activePopup = popup;
 }
 
 function closePopup() {
-    $("#msg-action-popup").hide();
+    $("#msg-action-popup").hide().css("visibility","visible").removeData("msgId");
     activePopup = null;
 }
 
-/* ============================================================
-EDIT MESSAGE
-============================================================ */
+$(document).on("click", function (e) {
+    if (activePopup && !$(e.target).closest("#msg-action-popup,.more-btn").length) closePopup();
+});
+$(document).on("keydown", function (e) {
+    if (e.key === "Escape" && activePopup) closePopup();
+});
+
+$(document).on("click", ".action-cancel", closePopup);
+
+/* EDIT */
 $(document).on("click", ".action-edit", function () {
     const id = $("#msg-action-popup").data("msgId");
-    startEdit(id);
     closePopup();
+    if (id) startEdit(id);
 });
 
 function startEdit(id) {
-    editing = true;
-
     const bubble = $(`.message[data-msg-id='${id}'] .message-bubble`);
-    const old = bubble.text();
+    if (!bubble.length || bubble.hasClass("removed-text")) return;
 
-    const editor = $("<textarea>", { class: "edit-textarea", maxlength: 2000, "aria-label": "Edit your message" }).val(old);
-    const actions = $("<div>", { class: "edit-actions" })
-        .append($("<button>", { class: "edit-save", "data-id": id, type: "button", text: "Save" }))
-        .append($("<button>", { class: "edit-cancel", type: "button", text: "Cancel" }));
+    editing = true;
+    const old = bubble.text();
+    const editor = $("<textarea>", {
+        class:"edit-textarea", maxlength:2000, "aria-label":"Edit your message"
+    }).val(old);
+    const actions = $("<div>", {class:"edit-actions"})
+        .append($("<button>", {class:"edit-save", "data-id":id, type:"button", text:"Save"}))
+        .append($("<button>", {class:"edit-cancel", type:"button", text:"Cancel"}));
     bubble.empty().append(editor, actions);
     editor.trigger("focus");
 }
 
 $(document).on("click", ".edit-save", function () {
-    const id = $(this).data("id");
-    const text = $(this).closest(".message-bubble").find("textarea").val().trim();
+    const button = $(this);
+    const id = button.attr("data-id");
+    const text = button.closest(".message-bubble").find("textarea").val().trim();
+    if (!text) { alert("Message cannot be empty."); return; }
+    if (text.length > 2000) { alert("Messages can contain up to 2,000 characters."); return; }
 
-    $.post("/SKYTRUFIBER/chat/edit_message_client.php", {
-        id,
-        ticket: ticketId,
-        message: text
-    }).done(() => {
-        editing = false;
-        loadMessages(true);
+    button.prop("disabled", true).text("Saving…");
+    $.ajax({
+        url:"/SKYTRUFIBER/chat/edit_message_client.php",
+        method:"POST", dataType:"json",
+        data:{id:id,ticket:ticketId,message:text}
+    }).done(res => {
+        if (res && res.status === "success") {
+            editing = false;
+            loadMessages(false);
+        } else {
+            alert((res && res.msg) || "The message could not be edited.");
+            button.prop("disabled",false).text("Save");
+        }
+    }).fail(xhr => {
+        alert((xhr.responseJSON && xhr.responseJSON.msg) || "Unable to save this message. Please try again.");
+        button.prop("disabled",false).text("Save");
     });
 });
 
@@ -421,6 +473,47 @@ $(document).on("click", ".edit-cancel", () => {
     editing = false;
     loadMessages(false);
 });
+
+/* UNSEND — removes the message for everyone using the existing soft-delete field. */
+$(document).on("click", ".action-unsend", function () {
+    const id = $("#msg-action-popup").data("msgId");
+    closePopup();
+    if (!id) return;
+    if (!confirm("Unsend this message? It will be marked as removed in this conversation for everyone.")) return;
+
+    $.ajax({
+        url:"/SKYTRUFIBER/chat/delete_message_client.php",
+        method:"POST", dataType:"json",
+        data:{id:id,ticket:ticketId}
+    }).done(res => {
+        if (res && (res.status === "ok" || res.status === "success")) {
+            $(`.message[data-msg-id='${id}']`).remove();
+            fetchNewMessages();
+        } else {
+            alert((res && res.msg) || "This message could not be unsent.");
+        }
+    }).fail(xhr => {
+        alert((xhr.responseJSON && xhr.responseJSON.msg) || "Unable to unsend this message. Please try again.");
+    });
+});
+
+/* DELETE FOR ME — hides only in this browser; the CSR and stored conversation are unchanged. */
+$(document).on("click", ".action-delete", function () {
+    const id = $("#msg-action-popup").data("msgId");
+    closePopup();
+    if (!id) return;
+    if (!confirm("Delete this message from your view on this device? The support team and conversation record will remain unchanged.")) return;
+
+    try {
+        const hidden = getLocallyHiddenIds();
+        if (!hidden.includes(String(id))) hidden.push(String(id));
+        localStorage.setItem(hiddenMessagesKey(), JSON.stringify(hidden));
+        $(`.message[data-msg-id='${id}']`).remove();
+        if (!$("#chat-messages .message").length) $("#chat-messages").html(emptyChatState());
+    } catch (_) {
+        alert("Your browser could not save this view preference. Please check your browser storage settings.");
+    }
+}
 
 /* ============================================================
 LOGOUT BUTTON
