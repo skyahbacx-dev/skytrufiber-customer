@@ -146,6 +146,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['full_name'], $_POST['
 <link rel="apple-touch-icon" href="/SKYTRUFIBER.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#08264d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SkyTruFiber">
+
 <script>
 /* Keep the login page immediately usable; avoid a multi-second intro lockout. */
 document.documentElement.classList.remove('intro');
@@ -323,6 +330,20 @@ button:hover{ background:#123a91; }
 #loginForm button{min-height:52px;border-radius:13px;background:linear-gradient(120deg,#1677e8,#0756c9);box-shadow:0 9px 22px #126fe52e}
 #loginForm button:hover{background:linear-gradient(120deg,#2589f3,#064db7)}
 .small-links a{color:#1268c4}
+/* PWA install invitation: visible on the login page, never blocks sign-in. */
+.pwa-install-card{position:fixed;z-index:20;left:16px;right:16px;bottom:16px;margin:0 auto;width:min(460px,calc(100vw - 32px));padding:17px 18px 15px;border:1px solid #dce8f5;border-radius:18px;background:#fff;color:#102b49;box-shadow:0 18px 55px #00152d45;text-align:left;box-sizing:border-box}
+.pwa-install-card[hidden]{display:none}
+.pwa-install-head{display:flex;align-items:center;gap:12px}
+.pwa-install-icon{width:46px;height:46px;flex:0 0 46px;border-radius:13px;object-fit:cover}
+.pwa-install-copy{min-width:0;flex:1}
+.pwa-install-copy strong{display:block;font-size:15px;color:#092d55}
+.pwa-install-copy span{display:block;margin-top:3px;font-size:12px;line-height:1.4;color:#60748a}
+.pwa-install-actions{display:flex;gap:9px;margin-top:14px}
+.pwa-install-actions button{width:auto;min-height:42px;padding:10px 15px;border-radius:11px;font-size:13px}
+.pwa-install-actions .pwa-dismiss{background:#eef3f8;color:#35516e;box-shadow:none}
+.pwa-install-help{display:none;margin:12px 0 0;padding:11px 12px;border-radius:11px;background:#f1f6fc;color:#35516e;font-size:12px;line-height:1.55}
+.pwa-install-help.is-visible{display:block}
+@media(max-width:480px){.pwa-install-card{bottom:max(12px,env(safe-area-inset-bottom));padding:15px}.pwa-install-actions button{flex:1}}
 @media(max-width:480px){.container{padding:26px 22px;border-radius:22px}}
 </style>
 </head>
@@ -370,6 +391,21 @@ button:hover{ background:#123a91; }
 </div>
 
 </div>
+
+<section class="pwa-install-card" id="pwaInstallCard" aria-label="Install SkyTruFiber app" hidden>
+  <div class="pwa-install-head">
+    <img class="pwa-install-icon" src="/pwa-icon.svg" alt="">
+    <div class="pwa-install-copy">
+      <strong>Use SkyTruFiber like an app</strong>
+      <span>Add the Customer Portal to your home screen for quick access.</span>
+    </div>
+  </div>
+  <div class="pwa-install-actions">
+    <button type="button" id="pwaInstallButton">Add to Home Screen</button>
+    <button type="button" class="pwa-dismiss" id="pwaDismissButton">Not now</button>
+  </div>
+  <p class="pwa-install-help" id="pwaInstallHelp" aria-live="polite"></p>
+</section>
 
 <script>
 // AJAX sign-in: show errors in place without reloading the whole page.
@@ -725,6 +761,8 @@ sendForgotBtn.onclick = async () => {
   console.info('[fiber3d] running: ' + N + ' strands, ' + PN + ' pulses' + (mobile ? ' (mobile)' : '') + (slow ? ' (reduced motion: slowed)' : ''));
 })();
 </script>
+
+<script src="/pwa-install.js" defer></script>
 
 </body>
 </html>
