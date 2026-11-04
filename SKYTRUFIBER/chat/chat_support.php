@@ -103,29 +103,31 @@ try {
                 </div>
             </div>
 
-            <div class="chat-header-right">
-                <a class="chat-dashboard-link" href="/fiber/dashboard"><i class="fa-solid fa-arrow-left"></i> Dashboard</a>
+            <nav class="chat-header-right" aria-label="Chat controls">
+                <a class="chat-dashboard-link" href="/fiber/dashboard">
+                    <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+                    <span>Dashboard</span>
+                </a>
 
-                <!-- THEME BUTTON -->
-                <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">
-                    <i class="fa-solid fa-moon theme-icon moon-icon"></i>
-                    <i class="fa-solid fa-sun theme-icon sun-icon"></i>
+                <button id="theme-toggle" class="theme-toggle" type="button"
+                        aria-label="Toggle dark mode" title="Toggle light and dark mode">
+                    <i class="fa-solid fa-moon theme-icon moon-icon" aria-hidden="true"></i>
+                    <i class="fa-solid fa-sun theme-icon sun-icon" aria-hidden="true"></i>
                 </button>
 
-                <!-- LOGOUT BUTTON -->
-                     <button id="logout-btn" class="logout-btn" type="button"> 
-                    <i class="fa-solid fa-right-from-bracket"></i> Logout
+                <button id="logout-btn" class="logout-btn" type="button">
+                    <i class="fa-solid fa-right-from-bracket" aria-hidden="true"></i>
+                    <span>Logout</span>
                 </button>
-
-            </div>
+            </nav>
         </div>
 
         <!-- CHAT MESSAGES AREA -->
-        <div id="chat-messages"></div>
+        <div id="chat-messages" aria-live="polite" aria-relevant="additions"></div>
 
         <!-- Scroll to bottom -->
-        <button id="scroll-bottom-btn" class="scroll-bottom-btn">
-            <i class="fa-solid fa-arrow-down"></i>
+        <button id="scroll-bottom-btn" class="scroll-bottom-btn" type="button" aria-label="Scroll to latest messages">
+            <i class="fa-solid fa-arrow-down" aria-hidden="true"></i>
         </button>
 
         <!-- INPUT AREA -->
@@ -139,7 +141,7 @@ try {
             </div>
 
             <button id="send-btn" class="chat-send-btn" type="button" aria-label="Send message" title="Send message">
-                <i class="fa-solid fa-paper-plane"></i>
+                <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
             </button>
         </div>
 
